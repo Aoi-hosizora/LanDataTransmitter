@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace LanDataTransmitter {
@@ -20,14 +22,14 @@ namespace LanDataTransmitter {
             }
         }
 
-        private void InitForm_Load(object sender, System.EventArgs e) {
+        private void InitForm_Load(object sender, EventArgs e) {
             var interfaces = Utils.GetNetworkInterfaces();
             interfaces.Insert(0, "All interfaces (serve on 0.0.0.0)");
             cbbInterface.Items.AddRange(interfaces.ToArray());
             cbbInterface.SelectedIndex = 0;
         }
 
-        private void cbbInterface_SelectedIndexChanged(object sender, System.EventArgs e) {
+        private void cbbInterface_SelectedIndexChanged(object sender, EventArgs e) {
             var selected = cbbInterface.SelectedItem as string;
             toolTip.SetToolTip(cbbInterface, selected);
             if (selected.StartsWith("All interfaces")) {
@@ -37,29 +39,65 @@ namespace LanDataTransmitter {
             }
         }
 
-        private void rbtnServer_CheckedChanged(object sender, System.EventArgs e) {
-            if (rbtnServer.Checked) {
-                cbbInterface.Enabled = true;
-                edtAddress.Enabled = true;
-                numPort.Enabled = true;
-            }
+        private bool AsServer { get => rbtnServer.Checked; }
+
+        private void rbtn_CheckedChanged(object sender, EventArgs e) {
+            cbbInterface.Enabled = AsServer;
         }
 
-        private void rbtnClient_CheckedChanged(object sender, System.EventArgs e) {
-            if (rbtnClient.Checked) {
-                cbbInterface.Enabled = false;
-                edtAddress.Enabled = true;
-                numPort.Enabled = true;
-            }
-        }
-
-        private void buttonExit_Click(object sender, System.EventArgs e) {
+        private void btnExit_Click(object sender, EventArgs e) {
             Close();
         }
 
-        private void buttonStart_Click(object sender, System.EventArgs e) {
-            lblHint.Text = rbtnServer.Checked ? "尝试监听..." : "尝试连接...";
+        private void btnStart_Click(object sender, EventArgs e) {
+            edtAddress.Enabled = false;
+            numPort.Enabled = false;
+            cbbInterface.Enabled = false;
+            rbtnClient.Enabled = false;
+            rbtnServer.Enabled = false;
+            btnStart.Enabled = false;
+
+            lblHint.Text = AsServer ? "尝试监听..." : "尝试连接...";
             lblHint.Visible = true;
+            var th = new Thread(() => {
+                var service = new GrpcService {
+                    Address = edtAddress.Text,
+                    Port = (int) numPort.Value,
+                };
+                if (AsServer) {
+                    service.Serve(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
+                } else {
+                    service.Connect(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
+                }
+            });
+            th.Start();
+        }
+
+        private void handleFailed(string reason) {
+            Invoke(new Action(() => {
+                if (AsServer) {
+                    MessageBox.Show($"无法监听指定的地址和端口。\n原因：{reason}", "监听失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                } else {
+                    MessageBox.Show($"无法连接到指定的地址和端口。\n原因：{reason}", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                lblHint.Visible = false;
+                btnStart.Enabled = true;
+                edtAddress.Enabled = true;
+                numPort.Enabled = true;
+                cbbInterface.Enabled = AsServer;
+                rbtnClient.Enabled = true;
+                rbtnServer.Enabled = true;
+            }));
+        }
+
+        private void handleSuccess(GrpcService service) {
+            Invoke(new Action(() => {
+                Global.behavior = AsServer ? ApplicationBehavior.AS_SERVER : ApplicationBehavior.AS_CLIENT;
+                Global.grpcService = service;
+                MainForm.Instance.Show();
+                Close();
+            }));
         }
     }
 }

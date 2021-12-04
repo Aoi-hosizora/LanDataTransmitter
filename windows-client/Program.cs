@@ -21,7 +21,7 @@ namespace LanDataTransmitter {
             // IsSingleInstance = true;
             EnableVisualStyles = true;
             SaveMySettingsOnExit = true;
-            ShutdownStyle = ShutdownMode.AfterMainFormCloses;
+            ShutdownStyle = ShutdownMode.AfterAllFormsClose;
         }
 
         [System.Diagnostics.DebuggerStepThrough]
