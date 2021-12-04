@@ -27,7 +27,6 @@ namespace LanDataTransmitter {
             this.components = new System.ComponentModel.Container();
             this.rbtnServer = new System.Windows.Forms.RadioButton();
             this.rbtnClient = new System.Windows.Forms.RadioButton();
-            this.lblSelect = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.cbbInterface = new System.Windows.Forms.ComboBox();
             this.numPort = new System.Windows.Forms.NumericUpDown();
@@ -38,8 +37,10 @@ namespace LanDataTransmitter {
             this.btnExit = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.lblHint = new System.Windows.Forms.Label();
+            this.gpbBehavior = new System.Windows.Forms.GroupBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
+            this.gpbBehavior.SuspendLayout();
             this.SuspendLayout();
             // 
             // rbtnServer
@@ -47,7 +48,7 @@ namespace LanDataTransmitter {
             this.rbtnServer.AutoSize = true;
             this.rbtnServer.Checked = true;
             this.rbtnServer.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.rbtnServer.Location = new System.Drawing.Point(15, 31);
+            this.rbtnServer.Location = new System.Drawing.Point(35, 25);
             this.rbtnServer.Name = "rbtnServer";
             this.rbtnServer.Size = new System.Drawing.Size(92, 22);
             this.rbtnServer.TabIndex = 1;
@@ -58,9 +59,10 @@ namespace LanDataTransmitter {
             // 
             // rbtnClient
             // 
+            this.rbtnClient.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.rbtnClient.AutoSize = true;
             this.rbtnClient.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.rbtnClient.Location = new System.Drawing.Point(15, 56);
+            this.rbtnClient.Location = new System.Drawing.Point(144, 25);
             this.rbtnClient.Name = "rbtnClient";
             this.rbtnClient.Size = new System.Drawing.Size(92, 22);
             this.rbtnClient.TabIndex = 2;
@@ -68,28 +70,16 @@ namespace LanDataTransmitter {
             this.rbtnClient.UseVisualStyleBackColor = true;
             this.rbtnClient.CheckedChanged += new System.EventHandler(this.rbtn_CheckedChanged);
             // 
-            // lblSelect
-            // 
-            this.lblSelect.AutoSize = true;
-            this.lblSelect.Location = new System.Drawing.Point(12, 9);
-            this.lblSelect.Name = "lblSelect";
-            this.lblSelect.Size = new System.Drawing.Size(189, 17);
-            this.lblSelect.TabIndex = 0;
-            this.lblSelect.Text = "请选择 Windows 客户端的行为：";
-            // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.cbbInterface);
             this.groupBox1.Controls.Add(this.numPort);
             this.groupBox1.Controls.Add(this.edtAddress);
             this.groupBox1.Controls.Add(this.lblPort);
             this.groupBox1.Controls.Add(this.lblAddress);
-            this.groupBox1.Location = new System.Drawing.Point(12, 84);
+            this.groupBox1.Location = new System.Drawing.Point(12, 76);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(271, 114);
+            this.groupBox1.Size = new System.Drawing.Size(271, 111);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "连接配置";
@@ -135,6 +125,7 @@ namespace LanDataTransmitter {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.edtAddress.Location = new System.Drawing.Point(84, 53);
             this.edtAddress.Name = "edtAddress";
+            this.edtAddress.ReadOnly = true;
             this.edtAddress.Size = new System.Drawing.Size(181, 23);
             this.edtAddress.TabIndex = 6;
             this.edtAddress.Text = "0.0.0.0";
@@ -161,7 +152,7 @@ namespace LanDataTransmitter {
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnStart.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnStart.Location = new System.Drawing.Point(127, 207);
+            this.btnStart.Location = new System.Drawing.Point(127, 196);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 25);
             this.btnStart.TabIndex = 10;
@@ -174,7 +165,7 @@ namespace LanDataTransmitter {
             this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnExit.Location = new System.Drawing.Point(208, 207);
+            this.btnExit.Location = new System.Drawing.Point(208, 196);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 25);
             this.btnExit.TabIndex = 11;
@@ -184,13 +175,25 @@ namespace LanDataTransmitter {
             // 
             // lblHint
             // 
+            this.lblHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblHint.AutoSize = true;
-            this.lblHint.Location = new System.Drawing.Point(56, 211);
+            this.lblHint.Location = new System.Drawing.Point(56, 200);
             this.lblHint.Name = "lblHint";
             this.lblHint.Size = new System.Drawing.Size(65, 17);
             this.lblHint.TabIndex = 9;
             this.lblHint.Text = "尝试监听...";
             this.lblHint.Visible = false;
+            // 
+            // gpbBehavior
+            // 
+            this.gpbBehavior.Controls.Add(this.rbtnServer);
+            this.gpbBehavior.Controls.Add(this.rbtnClient);
+            this.gpbBehavior.Location = new System.Drawing.Point(12, 12);
+            this.gpbBehavior.Name = "gpbBehavior";
+            this.gpbBehavior.Size = new System.Drawing.Size(271, 58);
+            this.gpbBehavior.TabIndex = 12;
+            this.gpbBehavior.TabStop = false;
+            this.gpbBehavior.Text = "请选择 Windows 客户端的行为";
             // 
             // InitForm
             // 
@@ -198,14 +201,12 @@ namespace LanDataTransmitter {
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExit;
-            this.ClientSize = new System.Drawing.Size(295, 241);
+            this.ClientSize = new System.Drawing.Size(295, 230);
+            this.Controls.Add(this.gpbBehavior);
             this.Controls.Add(this.lblHint);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.lblSelect);
-            this.Controls.Add(this.rbtnClient);
-            this.Controls.Add(this.rbtnServer);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -216,6 +217,8 @@ namespace LanDataTransmitter {
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).EndInit();
+            this.gpbBehavior.ResumeLayout(false);
+            this.gpbBehavior.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -225,7 +228,6 @@ namespace LanDataTransmitter {
 
         private System.Windows.Forms.RadioButton rbtnServer;
         private System.Windows.Forms.RadioButton rbtnClient;
-        private System.Windows.Forms.Label lblSelect;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Button btnExit;
@@ -236,5 +238,6 @@ namespace LanDataTransmitter {
         private System.Windows.Forms.ComboBox cbbInterface;
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.Label lblHint;
+        private System.Windows.Forms.GroupBox gpbBehavior;
     }
 }

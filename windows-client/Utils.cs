@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -28,6 +29,10 @@ namespace LanDataTransmitter {
                 }
             }
             return "unknown";
+        }
+
+        public static string GetGlobalId() {
+            return Guid.NewGuid().ToString();
         }
     }
 }

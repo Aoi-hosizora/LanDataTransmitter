@@ -6,9 +6,9 @@ service Transmitter {
     rpc Ping (PingRequest) returns (PingReply);
     rpc Stop (StopRequest) returns (StopReply);
     rpc PushText (PushTextRequest) returns (PushTextReply); // C -> S
-    rpc PushFile (PushFileRequest) returns (PushFileReply);
+    // rpc PushFile (PushFileRequest) returns (PushFileReply);
     rpc PullText (PullTextRequest) returns (stream PullTextReply); // C <- S
-    rpc PullFile (PullFileRequest) returns (stream PullFileReply);
+    // rpc PullFile (PullFileRequest) returns (stream PullFileReply);
 }
 
 message PingRequest {
@@ -16,24 +16,26 @@ message PingRequest {
 }
 
 message PingReply {
-    string message = 1;
+    bool accepted = 1;
+    string id = 2;
 }
 
-message StopRequest {}
-message StopReply {}
+message StopRequest {
+    string id = 1;
+}
+
+message StopReply {
+    bool valid = 1;
+}
 
 message PushTextRequest {
     string message = 1;
 }
+
 message PushTextReply {}
 
-message PushFileRequest {}
-message PushFileReply {}
-
 message PullTextRequest {}
+
 message PullTextReply {
     string message = 1;
 }
-
-message PullFileRequest {}
-message PullFileReply {}

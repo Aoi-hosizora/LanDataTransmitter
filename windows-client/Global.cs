@@ -1,9 +1,6 @@
-﻿using Grpc.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Grpc.Core;
+using Channels = System.Threading.Channels;
 
 namespace LanDataTransmitter {
 
@@ -17,11 +14,14 @@ namespace LanDataTransmitter {
         public static ApplicationBehavior behavior;
         public static GrpcService grpcService;
 
-        // server only
-        public static bool clientBind;
+        // for server only
+        public static bool isBindClient;
+        public static string bindClientId;
+        public static Channels.Channel<PullTextReply> pullTextChannel;
+        public static Channels.Channel<Exception> pullTextExceptionChannel;
 
-        // client only
-        public static IAsyncStreamReader<PullTextReply> pullTextReader;
+        // for client only
+        public static string clientId;
 
     }
 }

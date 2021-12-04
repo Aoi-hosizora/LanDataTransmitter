@@ -43,6 +43,12 @@ namespace LanDataTransmitter {
 
         private void rbtn_CheckedChanged(object sender, EventArgs e) {
             cbbInterface.Enabled = AsServer;
+            edtAddress.ReadOnly = AsServer;
+            if (!AsServer) {
+                edtAddress.Text = "127.0.0.1";
+            } else {
+                cbbInterface_SelectedIndexChanged(cbbInterface, new EventArgs());
+            }
         }
 
         private void btnExit_Click(object sender, EventArgs e) {
@@ -50,7 +56,7 @@ namespace LanDataTransmitter {
         }
 
         private void btnStart_Click(object sender, EventArgs e) {
-            edtAddress.Enabled = false;
+            edtAddress.ReadOnly = true;
             numPort.Enabled = false;
             cbbInterface.Enabled = false;
             rbtnClient.Enabled = false;
@@ -59,15 +65,15 @@ namespace LanDataTransmitter {
 
             lblHint.Text = AsServer ? "尝试监听..." : "尝试连接...";
             lblHint.Visible = true;
-            var th = new Thread(() => {
+            var th = new Thread(async () => {
                 var service = new GrpcService {
                     Address = edtAddress.Text,
                     Port = (int) numPort.Value,
                 };
                 if (AsServer) {
-                    service.Serve(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
+                    await service.Serve(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
                 } else {
-                    service.Connect(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
+                    await service.Connect(onSuccess: () => handleSuccess(service), onFailed: (r) => handleFailed(r));
                 }
             });
             th.Start();
@@ -83,7 +89,7 @@ namespace LanDataTransmitter {
 
                 lblHint.Visible = false;
                 btnStart.Enabled = true;
-                edtAddress.Enabled = true;
+                edtAddress.ReadOnly = AsServer;
                 numPort.Enabled = true;
                 cbbInterface.Enabled = AsServer;
                 rbtnClient.Enabled = true;
