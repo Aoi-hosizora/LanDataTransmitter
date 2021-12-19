@@ -16,9 +16,15 @@ namespace LanDataTransmitter {
             get { return _instance ??= new MainForm(); }
         }
 
-        private void MainForm_Load(object sender, EventArgs e) {
+        private async void MainForm_Load(object sender, EventArgs e) {
             PrepareUi();
-            PrepareGrpc();
+            await Task.Run(() => {
+                if (Global.Behavior == ApplicationBehavior.AS_SERVER) {
+                    PrepareGrpcServer();
+                } else {
+                    PrepareGrpcClient();
+                }
+            });
         }
 
         private void PrepareUi() {
@@ -38,54 +44,61 @@ namespace LanDataTransmitter {
             }
         }
 
-        private void PrepareGrpc() {
-            if (Global.Behavior == ApplicationBehavior.AS_SERVER) {
-                Global.GrpcService.SetupTransmitterServer(
-                    onBind: (_) => {
+        private void PrepareGrpcServer() {
+            Global.GrpcService.SetupTransmitterServer(
+                onBind: (_) => {
+                    this.InvokeAction(() => {
+                        lblClientId.Text = "已连接客户端 " + Global.BindClientId;
+                        btnForceDisconnect.Enabled = true;
+                        btnSendText.Enabled = true;
+                        btnSendFile.Enabled = true;
+                    });
+                },
+                onUnbind: (_) => {
+                    this.InvokeAction(() => {
+                        lblClientId.Text = "未绑定客户端";
+                        btnForceDisconnect.Enabled = false;
+                        btnSendText.Enabled = false;
+                        btnSendFile.Enabled = false;
+                    });
+                },
+                onReceived: (req) => {
+                    this.InvokeAction(() => {
+                        lsbRecord.AddToLast("Received from client: " + req.Message);
+                    });
+                }
+            );
+        }
+
+        private void PrepareGrpcClient() {
+            try {
+                Global.GrpcService.StartReceivingTextFromServer(
+                    onReceived: (reply) => {
                         this.InvokeAction(() => {
-                            lblClientId.Text = "已连接客户端 " + Global.BindClientId;
-                            btnForceDisconnect.Enabled = true;
-                            Global.PullChannel = new BidirectionalChannel<PullTextReply, Exception>(1);
-                            btnSendText.Enabled = true;
-                            btnSendFile.Enabled = true;
+                            lsbRecord.AddToLast("Received from server: " + reply.Message);
                         });
                     },
-                    onUnbind: (_) => {
+                    onFinish: async (needDisconnect) => {
+                        if (needDisconnect) {
+                            try {
+                                await Global.GrpcService.Disconnect();
+                            } catch (Exception) { }
+                        }
                         this.InvokeAction(() => {
-                            lblClientId.Text = "未绑定客户端";
-                            btnForceDisconnect.Enabled = false;
-                            Global.PullChannel?.Complete();
-                            Global.PullChannel = null;
-                            btnSendText.Enabled = false;
-                            btnSendFile.Enabled = false;
-                        });
-                    },
-                    onReceived: (req) => {
-                        this.InvokeAction(() => {
-                            lsbRecord.AddToLast("Received from client: " + req.Message);
+                            var ok = this.ShowQuestion("连接已断开", "与服务器的连接已断开，是否也关闭本客户端？");
+                            if (ok) {
+                                Close();
+                            } else {
+                                lblBehavior.Text = "当前作为客户端，与服务器的连接已断开。";
+                                btnSendFile.Enabled = false;
+                                btnSendText.Enabled = false;
+                                btnStop.Enabled = false;
+                            }
                         });
                     }
-                ); // AS_SERVER
-            } else {
-                try {
-                    Global.GrpcService.StartReceivingTextFromServer(
-                        onFinish: () => {
-                            this.InvokeAction(() => {
-                                // TODO
-                                this.ShowInfo("连接已断开", "与服务器的连接已断开。");
-                                btnSendText.Enabled = false;
-                                btnSendFile.Enabled = false;
-                            });
-                        },
-                        onReceived: (reply) => {
-                            this.InvokeAction(() => {
-                                lsbRecord.AddToLast("Received from server: " + reply.Message);
-                            });
-                        }
-                    );
-                } catch (Exception ex) {
-                    this.ShowError("初始化失败", $"无法接受来自服务器的推送。\n原因：{ex.Message}");
-                } // AS_CLIENT
+                );
+            } catch (Exception ex) {
+                this.ShowError("初始化失败", $"无法接受来自服务器的推送。\n原因：{ex.Message}");
             }
         }
 
@@ -123,8 +136,8 @@ namespace LanDataTransmitter {
 
         private async void btnStop_Click(object sender, EventArgs e) {
             btnStop.Enabled = false;
-            var flag = MessageBox.Show("是否断开连接并退出应用？", "结束确认", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-            if (flag == DialogResult.Yes) {
+            var ok = this.ShowQuestion("结束确认", "是否断开连接并退出应用？");
+            if (ok) {
                 await Task.Run(async () => {
                     if (Global.Behavior == ApplicationBehavior.AS_SERVER) {
                         try {
@@ -150,10 +163,15 @@ namespace LanDataTransmitter {
             if (Global.Behavior == ApplicationBehavior.AS_CLIENT) {
                 return;
             }
-            await Task.Run(async () => {
-                await Global.GrpcService.ForceDisconnect();
-                // TODO
-            });
+            btnForceDisconnect.Enabled = false;
+            var ok = this.ShowQuestion("断开所有连接确认", "是否断开所有客户端的连接？");
+            if (ok) {
+                await Task.Run(async () => {
+                    await Global.GrpcService.ForceDisconnect();
+                    // TODO
+                });
+            }
+            btnForceDisconnect.Enabled = true;
         }
     }
 }

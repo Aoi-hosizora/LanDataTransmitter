@@ -27,5 +27,10 @@ namespace LanDataTransmitter {
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        public static bool ShowQuestion(this Form _, string title, string message) {
+            var ok = MessageBox.Show(message, title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            return ok == DialogResult.Yes;
+        }
+
     }
 }
