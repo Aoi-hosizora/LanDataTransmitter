@@ -1,14 +1,8 @@
 ﻿using Grpc.Core;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Channels = System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace LanDataTransmitter {
 
@@ -17,59 +11,59 @@ namespace LanDataTransmitter {
         public string Address { get; set; }
         public int Port { get; set; }
 
-        public delegate void SuccessCallback();
-        public delegate void FailedCallback(string reason);
         public delegate void FinishCallback();
-        public delegate void ClientBindCallack(bool bind);
-        public delegate void DisplayClientTextCallback(PushTextRequest request);
-        public delegate void DisplayServerTextCallback(PullTextReply reply);
+        public delegate void ClientBindCallback(string clientId);
+        public delegate void ClientUnbindCallback(string clientId);
+        public delegate void ReceivedFromClientCallback(PushTextRequest request);
+        public delegate void ReceivedFromServerCallback(PullTextReply reply);
 
         private Server _server;
-        private TransmitterImplConfig _implConfig;
+        private TransmitterImpl _serverImpl;
 
-        // =============
-        // serve related
-        // =============
+        // ====================
+        // server serve related
+        // ====================
 
         /// <summary>For Server</summary>
-        public async Task Serve(SuccessCallback onSuccess, FailedCallback onFailed) {
-            _implConfig = new TransmitterImplConfig();
+        public async Task Serve() {
+            _serverImpl = new TransmitterImpl();
             _server = new Server {
-                Services = { Transmitter.BindService(new TransmitterImpl(_implConfig)) },
+                Services = { Transmitter.BindService(_serverImpl) },
                 Ports = { new ServerPort(Address, Port, ServerCredentials.Insecure) },
             };
             try {
-                await Task.Delay(millisecondsDelay: 200);
+                await Task.Delay(millisecondsDelay: 100);
                 _server.Start();
-                onSuccess?.Invoke();
             } catch (IOException) {
-                onFailed?.Invoke("无法启动服务器，可能由于端口被占用");
+                throw new Exception("端口可能被占用");
             } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
+                throw new Exception(ex.Message);
             }
         }
 
         /// <summary>For Server</summary>
-        public async Task Shutdown(SuccessCallback onSuccess) {
-            Global.pullTextChannel.Writer.Complete(new Exception("连接已断开"));
-            Global.pullTextExceptionChannel.Writer.Complete(new Exception("连接已断开"));
+        public async Task Shutdown() {
             // TODO
-            await _server?.ShutdownAsync();
-            onSuccess?.Invoke();
+            Global.PullChannel?.Complete();
+            if (_server != null) {
+                await _server.ShutdownAsync();
+            }
         }
 
-        public void ForceDisconnect(SuccessCallback onSuccess) {
-            Global.pullTextChannel.Writer.Complete(new Exception("连接已断开"));
-            Global.pullTextExceptionChannel.Writer.Complete(new Exception("连接已断开"));
-            onSuccess?.Invoke();
+        /// <summary>For Server</summary>
+        public async Task ForceDisconnect() {
+            // TODO
+            await new Task(() => {
+                Global.PullChannel?.Complete();
+            });
         }
 
-        // ===============
-        // connect related
-        // ===============
+        // ======================
+        // client connect related
+        // ======================
 
         /// <summary>For Client</summary>
-        public async Task Connect(SuccessCallback onSuccess, FailedCallback onFailed) {
+        public async Task Connect() {
             var channel = new Channel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel);
             try {
@@ -77,27 +71,25 @@ namespace LanDataTransmitter {
                 if (!reply.Accepted) {
                     throw new Exception("服务器已经绑定着一个客户端，无法绑定新的客户端");
                 }
-                Global.clientId = reply.Id;
-                onSuccess?.Invoke();
+                Global.SelfClientId = reply.Id;
             } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
+                throw new Exception(ex.Message);
             } finally {
                 await channel.ShutdownAsync();
             }
         }
 
         /// <summary>For Client</summary>
-        public async Task Disconnect(SuccessCallback onSuccess, FailedCallback onFailed) {
+        public async Task Disconnect() {
             var channel = new Channel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel);
             try {
-                var reply = await client.StopAsync(new StopRequest { Id = Global.clientId });
+                var reply = await client.StopAsync(new StopRequest { Id = Global.SelfClientId });
                 if (!reply.Valid) {
                     throw new Exception("请求不合法，与服务器所绑定的客户端不匹配");
                 }
-                onSuccess?.Invoke();
             } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
+                throw new Exception(ex.Message);
             } finally {
                 await channel.ShutdownAsync();
             }
@@ -108,28 +100,27 @@ namespace LanDataTransmitter {
         // ===============
 
         /// <summary>For Server</summary>
-        public void SetupTransmitter(ClientBindCallack onClientBind, DisplayClientTextCallback onDisplayText) {
-            _implConfig.OnClientBind = onClientBind; // 服务器对客户端的绑定信息更改的回调
-            _implConfig.OnDisplayText = onDisplayText; // 处理接收到来自客户端的消息的回调
+        public void SetupTransmitterServer(ClientBindCallback onBind, ClientUnbindCallback onUnbind, ReceivedFromClientCallback onReceived) {
+            _serverImpl.OnClientBind = onBind; // 回调：服务器绑定了客户端
+            _serverImpl.OnClientUnbind = onUnbind; // 回调：服务器取消绑定了客户端
+            _serverImpl.OnReceivedFromClient = onReceived; // 回调：服务器收到了来自客户端的消息
         }
 
         /// <summary>For Client</summary>
-        public void StartHandlePullText(SuccessCallback onSuccess, FailedCallback onFailed, FinishCallback onFinish, DisplayServerTextCallback onDisplayText) {
+        public void StartReceivingTextFromServer(FinishCallback onFinish, ReceivedFromServerCallback onReceived) {
             var channel = new Channel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel);
             try {
                 var stream = client.PullText(new PullTextRequest()).ResponseStream;
-                var th = new Thread(async () => {
+                Task.Run(async () => {
                     while (await stream.MoveNext()) {
                         var reply = stream.Current;
-                        onDisplayText?.Invoke(reply);
+                        onReceived?.Invoke(reply); // 回调：客户端收到了来自服务器的消息
                     }
-                    onFinish?.Invoke();
+                    onFinish?.Invoke(); // 回调：来自服务器的消息已结束
                 });
-                th.Start();
-                onSuccess?.Invoke();
             } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
+                throw new Exception(ex.Message);
             }
         }
 
@@ -137,98 +128,121 @@ namespace LanDataTransmitter {
         // send related
         // ============
 
+        /// <summary>For Server</summary>
+        public async Task SendTextToClient(string text) {
+            try {
+                await Global.PullChannel.WriteForwardChannel(new PullTextReply { Message = text });
+                var ex = await Global.PullChannel.ReadBackwardChannel();
+                if (ex != null) {
+                    throw ex;
+                }
+            } catch (Channels.ChannelClosedException) {
+                Console.WriteLine("SendTextToClient: ChannelClosedException");
+            } catch (Exception ex) {
+                throw new Exception(ex.Message);
+            }
+        }
+
         /// <summary>For Client</summary>
-        public async Task SendTextToServer(string text, SuccessCallback onSuccess, FailedCallback onFailed) {
+        public async Task SendTextToServer(string text) {
             var channel = new Channel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel);
             try {
                 await client.PushTextAsync(new PushTextRequest { Message = text });
-                onSuccess?.Invoke();
             } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
+                throw new Exception(ex.Message);
             } finally {
                 await channel.ShutdownAsync();
             }
         }
 
-        /// <summary>For Server</summary>
-        public async Task SendTextToClient(string text, SuccessCallback onSuccess, FailedCallback onFailed) {
-            try {
-                await Global.pullTextChannel.Writer.WriteAsync(new PullTextReply { Message = text });
-                var ex = await Global.pullTextExceptionChannel.Reader.ReadAsync();
-                if (ex != null) {
-                    throw ex;
-                }
-                onSuccess?.Invoke();
-            } catch (Channels.ChannelClosedException) {
-                Console.WriteLine("SendTextToClient: ChannelClosedException");
-                return;
-            } catch (Exception ex) {
-                onFailed?.Invoke(ex.Message);
-            }
+    } // class GrpcService
+
+    class BidirectionalChannel<TForward, TBackward> {
+        public BidirectionalChannel(int capacity) {
+            _forwardChannel = Channels.Channel.CreateBounded<TForward>(capacity);
+            _backwardChannel = Channels.Channel.CreateBounded<TBackward>(capacity);
         }
 
-    }
+        private readonly Channels.Channel<TForward> _forwardChannel;
+        private readonly Channels.Channel<TBackward> _backwardChannel;
 
-    class TransmitterImplConfig {
-        public GrpcService.ClientBindCallack OnClientBind { set; get; }
-        public GrpcService.DisplayClientTextCallback OnDisplayText { set; get; }
-    }
+        public async Task WriteForwardChannel(TForward data) {
+            await _forwardChannel.Writer.WriteAsync(data);
+        }
+
+        public async Task WriteBackwardChannel(TBackward data) {
+            await _backwardChannel.Writer.WriteAsync(data);
+        }
+
+        public async Task<TForward> ReadForwardChannel() {
+            return await _forwardChannel.Reader.ReadAsync();
+        }
+
+        public async Task<TBackward> ReadBackwardChannel() {
+            return await _backwardChannel.Reader.ReadAsync();
+        }
+
+        public void Complete(string message = null) {
+            try {
+                _forwardChannel.Writer.Complete(new Exception(message ?? "连接已断开"));
+                _backwardChannel.Writer.Complete(new Exception(message ?? "连接已断开"));
+            } catch (InvalidOperationException) { }
+        }
+
+    } // class BidirectionalChannel
 
     class TransmitterImpl : Transmitter.TransmitterBase {
 
-        private readonly TransmitterImplConfig _config;
-
-        public TransmitterImpl(TransmitterImplConfig config) {
-            _config = config;
-        }
+        public GrpcService.ClientBindCallback OnClientBind { get; set; }
+        public GrpcService.ClientUnbindCallback OnClientUnbind { get; set; }
+        public GrpcService.ReceivedFromClientCallback OnReceivedFromClient { get; set; }
 
         public override Task<PingReply> Ping(PingRequest request, ServerCallContext context) {
-            if (Global.isBindClient) {
+            if (Global.IsBindingClient) {
                 return Task.FromResult(new PingReply { Accepted = false });
             }
-            Global.isBindClient = true;
-            Global.bindClientId = Utils.GetGlobalId();
-            _config.OnClientBind?.Invoke(true);
-            return Task.FromResult(new PingReply { Accepted = true, Id = Global.bindClientId });
+            Global.IsBindingClient = true;
+            Global.BindClientId = Utils.GetGlobalId();
+            OnClientBind?.Invoke(Global.BindClientId);
+            return Task.FromResult(new PingReply { Accepted = true, Id = Global.BindClientId });
         }
 
         public override Task<StopReply> Stop(StopRequest request, ServerCallContext context) {
-            if (request.Id != Global.bindClientId) {
+            if (request.Id != Global.BindClientId) {
                 return Task.FromResult(new StopReply { Valid = false });
             }
-            Global.isBindClient = false;
-            Global.bindClientId = "";
-            _config.OnClientBind?.Invoke(false);
+            Global.IsBindingClient = false;
+            OnClientUnbind?.Invoke(Global.BindClientId);
+            Global.BindClientId = "";
             return Task.FromResult(new StopReply { Valid = true });
         }
 
         public override Task<PushTextReply> PushText(PushTextRequest request, ServerCallContext context) {
-            _config.OnDisplayText?.Invoke(request);
+            OnReceivedFromClient?.Invoke(request);
             return Task.FromResult(new PushTextReply());
         }
 
         public override async Task PullText(PullTextRequest request, IServerStreamWriter<PullTextReply> responseStream, ServerCallContext context) {
-            if (Global.pullTextChannel == null) {
+            if (Global.PullChannel == null) {
                 Console.WriteLine("PullText: Global.pullTextChannel == null");
                 return;
             }
             while (true) {
                 try {
-                    var reply = await Global.pullTextChannel.Reader.ReadAsync();
+                    var reply = await Global.PullChannel.ReadForwardChannel();
                     await responseStream.WriteAsync(reply);
-                    await Global.pullTextExceptionChannel.Writer.WriteAsync(null);
+                    await Global.PullChannel.WriteBackwardChannel(null);
                 } catch (Channels.ChannelClosedException) {
                     Console.WriteLine("PullText: ChannelClosedException");
                     return;
                 } catch (Exception ex) {
                     try {
-                        await Global.pullTextExceptionChannel.Writer.WriteAsync(ex);
+                        await Global.PullChannel.WriteBackwardChannel(ex);
                     } catch (Channels.ChannelClosedException) { }
-                    continue;
                 }
             }
         }
 
-    }
+    } // class TransmitterImpl
 }

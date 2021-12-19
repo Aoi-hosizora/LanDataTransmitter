@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualBasic.ApplicationServices;
 using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Globalization;
+using System.Threading;
 
 namespace LanDataTransmitter {
 
@@ -18,6 +18,8 @@ namespace LanDataTransmitter {
 
         [System.Diagnostics.DebuggerStepThrough]
         public Program() {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
             // IsSingleInstance = true;
             EnableVisualStyles = true;
             SaveMySettingsOnExit = true;
@@ -26,7 +28,7 @@ namespace LanDataTransmitter {
 
         [System.Diagnostics.DebuggerStepThrough]
         protected override void OnCreateMainForm() {
-            MainForm = LanDataTransmitter.InitForm.Instance;
+            MainForm = InitForm.Instance;
         }
     }
 }

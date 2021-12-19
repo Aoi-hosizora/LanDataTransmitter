@@ -24,37 +24,69 @@ namespace LanDataTransmitter {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.gpbConnect = new System.Windows.Forms.GroupBox();
-            this.btnStop = new System.Windows.Forms.Button();
-            this.lbRecord = new System.Windows.Forms.ListBox();
-            this.edtText = new System.Windows.Forms.TextBox();
-            this.btnFile = new System.Windows.Forms.Button();
-            this.btnSend = new System.Windows.Forms.Button();
-            this.sctnContent = new System.Windows.Forms.SplitContainer();
-            this.lblClientId = new System.Windows.Forms.Label();
+            this.grpConnect = new System.Windows.Forms.GroupBox();
             this.lblBehavior = new System.Windows.Forms.Label();
+            this.lblClientId = new System.Windows.Forms.Label();
             this.btnForceDisconnect = new System.Windows.Forms.Button();
-            this.gpbConnect.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.sctnContent)).BeginInit();
-            this.sctnContent.Panel1.SuspendLayout();
-            this.sctnContent.Panel2.SuspendLayout();
-            this.sctnContent.SuspendLayout();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.lsbRecord = new System.Windows.Forms.ListBox();
+            this.edtText = new System.Windows.Forms.TextBox();
+            this.btnSendFile = new System.Windows.Forms.Button();
+            this.btnSendText = new System.Windows.Forms.Button();
+            this.splContent = new System.Windows.Forms.SplitContainer();
+            this.grpConnect.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splContent)).BeginInit();
+            this.splContent.Panel1.SuspendLayout();
+            this.splContent.Panel2.SuspendLayout();
+            this.splContent.SuspendLayout();
             this.SuspendLayout();
             // 
-            // gpbConnect
+            // grpConnect
             // 
-            this.gpbConnect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.grpConnect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.gpbConnect.Controls.Add(this.lblBehavior);
-            this.gpbConnect.Controls.Add(this.lblClientId);
-            this.gpbConnect.Controls.Add(this.btnForceDisconnect);
-            this.gpbConnect.Controls.Add(this.btnStop);
-            this.gpbConnect.Location = new System.Drawing.Point(12, 12);
-            this.gpbConnect.Name = "gpbConnect";
-            this.gpbConnect.Size = new System.Drawing.Size(340, 100);
-            this.gpbConnect.TabIndex = 0;
-            this.gpbConnect.TabStop = false;
-            this.gpbConnect.Text = "连接信息";
+            this.grpConnect.Controls.Add(this.lblBehavior);
+            this.grpConnect.Controls.Add(this.lblClientId);
+            this.grpConnect.Controls.Add(this.btnForceDisconnect);
+            this.grpConnect.Controls.Add(this.btnStop);
+            this.grpConnect.Location = new System.Drawing.Point(12, 12);
+            this.grpConnect.Name = "grpConnect";
+            this.grpConnect.Size = new System.Drawing.Size(340, 100);
+            this.grpConnect.TabIndex = 0;
+            this.grpConnect.TabStop = false;
+            this.grpConnect.Text = "连接信息";
+            // 
+            // lblBehavior
+            // 
+            this.lblBehavior.AutoSize = true;
+            this.lblBehavior.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.lblBehavior.Location = new System.Drawing.Point(12, 22);
+            this.lblBehavior.Name = "lblBehavior";
+            this.lblBehavior.Size = new System.Drawing.Size(224, 17);
+            this.lblBehavior.TabIndex = 6;
+            this.lblBehavior.Text = "当前作为服务器，正在监听 0.0.0.0:9999";
+            // 
+            // lblClientId
+            // 
+            this.lblClientId.AutoSize = true;
+            this.lblClientId.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.lblClientId.Location = new System.Drawing.Point(12, 46);
+            this.lblClientId.Name = "lblClientId";
+            this.lblClientId.Size = new System.Drawing.Size(80, 17);
+            this.lblClientId.TabIndex = 6;
+            this.lblClientId.Text = "未绑定客户端";
+            // 
+            // btnForceDisconnect
+            // 
+            this.btnForceDisconnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnForceDisconnect.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnForceDisconnect.Location = new System.Drawing.Point(163, 69);
+            this.btnForceDisconnect.Name = "btnForceDisconnect";
+            this.btnForceDisconnect.Size = new System.Drawing.Size(90, 25);
+            this.btnForceDisconnect.TabIndex = 5;
+            this.btnForceDisconnect.Text = "断开所有连接";
+            this.btnForceDisconnect.UseVisualStyleBackColor = true;
+            this.btnForceDisconnect.Click += new System.EventHandler(this.btnForceDisconnect_Click);
             // 
             // btnStop
             // 
@@ -68,17 +100,17 @@ namespace LanDataTransmitter {
             this.btnStop.UseVisualStyleBackColor = true;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
-            // lbRecord
+            // lsbRecord
             // 
-            this.lbRecord.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbRecord.FormattingEnabled = true;
-            this.lbRecord.IntegralHeight = false;
-            this.lbRecord.ItemHeight = 17;
-            this.lbRecord.Location = new System.Drawing.Point(0, 0);
-            this.lbRecord.Name = "lbRecord";
-            this.lbRecord.ScrollAlwaysVisible = true;
-            this.lbRecord.Size = new System.Drawing.Size(340, 100);
-            this.lbRecord.TabIndex = 3;
+            this.lsbRecord.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsbRecord.FormattingEnabled = true;
+            this.lsbRecord.IntegralHeight = false;
+            this.lsbRecord.ItemHeight = 17;
+            this.lsbRecord.Location = new System.Drawing.Point(0, 0);
+            this.lsbRecord.Name = "lsbRecord";
+            this.lsbRecord.ScrollAlwaysVisible = true;
+            this.lsbRecord.Size = new System.Drawing.Size(340, 100);
+            this.lsbRecord.TabIndex = 3;
             // 
             // edtText
             // 
@@ -90,92 +122,60 @@ namespace LanDataTransmitter {
             this.edtText.Size = new System.Drawing.Size(340, 70);
             this.edtText.TabIndex = 4;
             // 
-            // btnFile
+            // btnSendFile
             // 
-            this.btnFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFile.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnFile.Location = new System.Drawing.Point(277, 301);
-            this.btnFile.Name = "btnFile";
-            this.btnFile.Size = new System.Drawing.Size(75, 25);
-            this.btnFile.TabIndex = 5;
-            this.btnFile.Text = "发送文件...";
-            this.btnFile.UseVisualStyleBackColor = true;
+            this.btnSendFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendFile.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnSendFile.Location = new System.Drawing.Point(277, 301);
+            this.btnSendFile.Name = "btnSendFile";
+            this.btnSendFile.Size = new System.Drawing.Size(75, 25);
+            this.btnSendFile.TabIndex = 5;
+            this.btnSendFile.Text = "发送文件...";
+            this.btnSendFile.UseVisualStyleBackColor = true;
+            this.btnSendFile.Click += new System.EventHandler(this.btnSendFile_Click);
             // 
-            // btnSend
+            // btnSendText
             // 
-            this.btnSend.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSend.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnSend.Location = new System.Drawing.Point(196, 301);
-            this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(75, 25);
-            this.btnSend.TabIndex = 6;
-            this.btnSend.Text = "发送";
-            this.btnSend.UseVisualStyleBackColor = true;
-            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
+            this.btnSendText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendText.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnSendText.Location = new System.Drawing.Point(196, 301);
+            this.btnSendText.Name = "btnSendText";
+            this.btnSendText.Size = new System.Drawing.Size(75, 25);
+            this.btnSendText.TabIndex = 6;
+            this.btnSendText.Text = "发送";
+            this.btnSendText.UseVisualStyleBackColor = true;
+            this.btnSendText.Click += new System.EventHandler(this.btnSendText_Click);
             // 
-            // sctnContent
+            // splContent
             // 
-            this.sctnContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.splContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.sctnContent.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.sctnContent.Location = new System.Drawing.Point(12, 118);
-            this.sctnContent.Name = "sctnContent";
-            this.sctnContent.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splContent.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splContent.Location = new System.Drawing.Point(12, 118);
+            this.splContent.Name = "splContent";
+            this.splContent.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // sctnContent.Panel1
+            // splContent.Panel1
             // 
-            this.sctnContent.Panel1.Controls.Add(this.lbRecord);
+            this.splContent.Panel1.Controls.Add(this.lsbRecord);
             // 
-            // sctnContent.Panel2
+            // splContent.Panel2
             // 
-            this.sctnContent.Panel2.Controls.Add(this.edtText);
-            this.sctnContent.Size = new System.Drawing.Size(340, 174);
-            this.sctnContent.SplitterDistance = 100;
-            this.sctnContent.TabIndex = 7;
-            // 
-            // lblClientId
-            // 
-            this.lblClientId.AutoSize = true;
-            this.lblClientId.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.lblClientId.Location = new System.Drawing.Point(12, 44);
-            this.lblClientId.Name = "lblClientId";
-            this.lblClientId.Size = new System.Drawing.Size(80, 17);
-            this.lblClientId.TabIndex = 6;
-            this.lblClientId.Text = "未绑定客户端";
-            // 
-            // lblBehavior
-            // 
-            this.lblBehavior.AutoSize = true;
-            this.lblBehavior.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.lblBehavior.Location = new System.Drawing.Point(12, 22);
-            this.lblBehavior.Name = "lblBehavior";
-            this.lblBehavior.Size = new System.Drawing.Size(224, 17);
-            this.lblBehavior.TabIndex = 6;
-            this.lblBehavior.Text = "当前作为服务器，正在监听 0.0.0.0:9999";
-            // 
-            // btnForceDisconnect
-            // 
-            this.btnForceDisconnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnForceDisconnect.Enabled = false;
-            this.btnForceDisconnect.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnForceDisconnect.Location = new System.Drawing.Point(178, 69);
-            this.btnForceDisconnect.Name = "btnForceDisconnect";
-            this.btnForceDisconnect.Size = new System.Drawing.Size(75, 25);
-            this.btnForceDisconnect.TabIndex = 5;
-            this.btnForceDisconnect.Text = "断开连接";
-            this.btnForceDisconnect.UseVisualStyleBackColor = true;
-            this.btnForceDisconnect.Click += new System.EventHandler(this.btnForceDisconnect_Click);
+            this.splContent.Panel2.Controls.Add(this.edtText);
+            this.splContent.Size = new System.Drawing.Size(340, 174);
+            this.splContent.SplitterDistance = 100;
+            this.splContent.TabIndex = 7;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(364, 335);
-            this.Controls.Add(this.sctnContent);
-            this.Controls.Add(this.btnSend);
-            this.Controls.Add(this.gpbConnect);
-            this.Controls.Add(this.btnFile);
+            this.Controls.Add(this.splContent);
+            this.Controls.Add(this.btnSendText);
+            this.Controls.Add(this.grpConnect);
+            this.Controls.Add(this.btnSendFile);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
@@ -183,25 +183,25 @@ namespace LanDataTransmitter {
             this.Name = "MainForm";
             this.Text = "LAN Data Transmitter";
             this.Load += new System.EventHandler(this.MainForm_Load);
-            this.gpbConnect.ResumeLayout(false);
-            this.gpbConnect.PerformLayout();
-            this.sctnContent.Panel1.ResumeLayout(false);
-            this.sctnContent.Panel2.ResumeLayout(false);
-            this.sctnContent.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.sctnContent)).EndInit();
-            this.sctnContent.ResumeLayout(false);
+            this.grpConnect.ResumeLayout(false);
+            this.grpConnect.PerformLayout();
+            this.splContent.Panel1.ResumeLayout(false);
+            this.splContent.Panel2.ResumeLayout(false);
+            this.splContent.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splContent)).EndInit();
+            this.splContent.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.GroupBox gpbConnect;
-        private System.Windows.Forms.ListBox lbRecord;
+        private System.Windows.Forms.GroupBox grpConnect;
+        private System.Windows.Forms.ListBox lsbRecord;
         private System.Windows.Forms.TextBox edtText;
-        private System.Windows.Forms.Button btnFile;
-        private System.Windows.Forms.Button btnSend;
-        private System.Windows.Forms.SplitContainer sctnContent;
+        private System.Windows.Forms.Button btnSendFile;
+        private System.Windows.Forms.Button btnSendText;
+        private System.Windows.Forms.SplitContainer splContent;
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.Label lblClientId;
         private System.Windows.Forms.Label lblBehavior;

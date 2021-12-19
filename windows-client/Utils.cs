@@ -8,24 +8,26 @@ namespace LanDataTransmitter {
 
     static class Utils {
 
-        public static List<string> GetNetworkInterfaces() {
+        public static IEnumerable<string> GetNetworkInterfaces() {
             var result = new List<string>();
             foreach (var ni in NetworkInterface.GetAllNetworkInterfaces()) {
                 if (ni.GetIPProperties().UnicastAddresses.Any(addr => addr.Address.AddressFamily == AddressFamily.InterNetwork)) {
                     result.Add(ni.Description);
                 }
             }
+            result.Insert(0, "All interfaces (serve on 0.0.0.0)");
             return result;
         }
 
         public static string GetNetworkInterfaceIPv4(string description) {
-            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces()) {
-                if (ni.Description == description) {
-                    foreach (var addr in ni.GetIPProperties().UnicastAddresses) {
-                        if (addr.Address.AddressFamily == AddressFamily.InterNetwork) {
-                            return addr.Address.ToString();
-                        }
-                    }
+            if (description == "All interfaces (serve on 0.0.0.0)") {
+                return "0.0.0.0";
+            }
+            var ni = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(ni => ni.Description == description);
+            if (ni != null) {
+                var addr = ni.GetIPProperties().UnicastAddresses.FirstOrDefault(addr => addr.Address.AddressFamily == AddressFamily.InterNetwork);
+                if (addr != null) {
+                    return addr.Address.ToString();
                 }
             }
             return "unknown";
