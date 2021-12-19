@@ -26,7 +26,7 @@ namespace LanDataTransmitter {
         private void InitializeComponent() {
             this.grpConnect = new System.Windows.Forms.GroupBox();
             this.lblBehavior = new System.Windows.Forms.Label();
-            this.lblClientId = new System.Windows.Forms.Label();
+            this.lblClientInfo = new System.Windows.Forms.Label();
             this.btnForceDisconnect = new System.Windows.Forms.Button();
             this.btnStop = new System.Windows.Forms.Button();
             this.lsbRecord = new System.Windows.Forms.ListBox();
@@ -34,6 +34,8 @@ namespace LanDataTransmitter {
             this.btnSendFile = new System.Windows.Forms.Button();
             this.btnSendText = new System.Windows.Forms.Button();
             this.splContent = new System.Windows.Forms.SplitContainer();
+            this.cboSendTo = new System.Windows.Forms.ComboBox();
+            this.lblSendTo = new System.Windows.Forms.Label();
             this.grpConnect.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splContent)).BeginInit();
             this.splContent.Panel1.SuspendLayout();
@@ -46,12 +48,12 @@ namespace LanDataTransmitter {
             this.grpConnect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpConnect.Controls.Add(this.lblBehavior);
-            this.grpConnect.Controls.Add(this.lblClientId);
+            this.grpConnect.Controls.Add(this.lblClientInfo);
             this.grpConnect.Controls.Add(this.btnForceDisconnect);
             this.grpConnect.Controls.Add(this.btnStop);
             this.grpConnect.Location = new System.Drawing.Point(12, 12);
             this.grpConnect.Name = "grpConnect";
-            this.grpConnect.Size = new System.Drawing.Size(340, 100);
+            this.grpConnect.Size = new System.Drawing.Size(360, 100);
             this.grpConnect.TabIndex = 0;
             this.grpConnect.TabStop = false;
             this.grpConnect.Text = "连接信息";
@@ -66,21 +68,21 @@ namespace LanDataTransmitter {
             this.lblBehavior.TabIndex = 6;
             this.lblBehavior.Text = "当前作为服务器，正在监听 0.0.0.0:9999";
             // 
-            // lblClientId
+            // lblClientInfo
             // 
-            this.lblClientId.AutoSize = true;
-            this.lblClientId.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.lblClientId.Location = new System.Drawing.Point(12, 46);
-            this.lblClientId.Name = "lblClientId";
-            this.lblClientId.Size = new System.Drawing.Size(80, 17);
-            this.lblClientId.TabIndex = 6;
-            this.lblClientId.Text = "未绑定客户端";
+            this.lblClientInfo.AutoSize = true;
+            this.lblClientInfo.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.lblClientInfo.Location = new System.Drawing.Point(12, 46);
+            this.lblClientInfo.Name = "lblClientInfo";
+            this.lblClientInfo.Size = new System.Drawing.Size(80, 17);
+            this.lblClientInfo.TabIndex = 6;
+            this.lblClientInfo.Text = "未连接客户端";
             // 
             // btnForceDisconnect
             // 
             this.btnForceDisconnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnForceDisconnect.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnForceDisconnect.Location = new System.Drawing.Point(163, 69);
+            this.btnForceDisconnect.Location = new System.Drawing.Point(183, 69);
             this.btnForceDisconnect.Name = "btnForceDisconnect";
             this.btnForceDisconnect.Size = new System.Drawing.Size(90, 25);
             this.btnForceDisconnect.TabIndex = 5;
@@ -92,7 +94,7 @@ namespace LanDataTransmitter {
             // 
             this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnStop.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnStop.Location = new System.Drawing.Point(259, 69);
+            this.btnStop.Location = new System.Drawing.Point(279, 69);
             this.btnStop.Name = "btnStop";
             this.btnStop.Size = new System.Drawing.Size(75, 25);
             this.btnStop.TabIndex = 5;
@@ -109,7 +111,7 @@ namespace LanDataTransmitter {
             this.lsbRecord.Location = new System.Drawing.Point(0, 0);
             this.lsbRecord.Name = "lsbRecord";
             this.lsbRecord.ScrollAlwaysVisible = true;
-            this.lsbRecord.Size = new System.Drawing.Size(340, 100);
+            this.lsbRecord.Size = new System.Drawing.Size(360, 100);
             this.lsbRecord.TabIndex = 3;
             // 
             // edtText
@@ -119,14 +121,15 @@ namespace LanDataTransmitter {
             this.edtText.Multiline = true;
             this.edtText.Name = "edtText";
             this.edtText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.edtText.Size = new System.Drawing.Size(340, 70);
+            this.edtText.Size = new System.Drawing.Size(360, 48);
             this.edtText.TabIndex = 4;
+            this.edtText.TextChanged += new System.EventHandler(this.edtText_TextChanged);
             // 
             // btnSendFile
             // 
             this.btnSendFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendFile.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnSendFile.Location = new System.Drawing.Point(277, 301);
+            this.btnSendFile.Location = new System.Drawing.Point(297, 307);
             this.btnSendFile.Name = "btnSendFile";
             this.btnSendFile.Size = new System.Drawing.Size(75, 25);
             this.btnSendFile.TabIndex = 5;
@@ -138,7 +141,7 @@ namespace LanDataTransmitter {
             // 
             this.btnSendText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendText.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnSendText.Location = new System.Drawing.Point(196, 301);
+            this.btnSendText.Location = new System.Drawing.Point(216, 307);
             this.btnSendText.Name = "btnSendText";
             this.btnSendText.Size = new System.Drawing.Size(75, 25);
             this.btnSendText.TabIndex = 6;
@@ -163,15 +166,40 @@ namespace LanDataTransmitter {
             // splContent.Panel2
             // 
             this.splContent.Panel2.Controls.Add(this.edtText);
-            this.splContent.Size = new System.Drawing.Size(340, 174);
+            this.splContent.Size = new System.Drawing.Size(360, 152);
             this.splContent.SplitterDistance = 100;
             this.splContent.TabIndex = 7;
+            // 
+            // cboSendTo
+            // 
+            this.cboSendTo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboSendTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboSendTo.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cboSendTo.FormattingEnabled = true;
+            this.cboSendTo.Location = new System.Drawing.Point(69, 276);
+            this.cboSendTo.Name = "cboSendTo";
+            this.cboSendTo.Size = new System.Drawing.Size(303, 25);
+            this.cboSendTo.TabIndex = 8;
+            this.cboSendTo.SelectedIndexChanged += new System.EventHandler(this.cboSendTo_SelectedIndexChanged);
+            // 
+            // lblSendTo
+            // 
+            this.lblSendTo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblSendTo.AutoSize = true;
+            this.lblSendTo.Location = new System.Drawing.Point(12, 279);
+            this.lblSendTo.Name = "lblSendTo";
+            this.lblSendTo.Size = new System.Drawing.Size(51, 17);
+            this.lblSendTo.TabIndex = 9;
+            this.lblSendTo.Text = "发送至 :";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(364, 335);
+            this.ClientSize = new System.Drawing.Size(384, 341);
+            this.Controls.Add(this.lblSendTo);
+            this.Controls.Add(this.cboSendTo);
             this.Controls.Add(this.splContent);
             this.Controls.Add(this.btnSendText);
             this.Controls.Add(this.grpConnect);
@@ -179,7 +207,7 @@ namespace LanDataTransmitter {
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(380, 350);
+            this.MinimumSize = new System.Drawing.Size(400, 380);
             this.Name = "MainForm";
             this.Text = "LAN Data Transmitter";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -191,6 +219,7 @@ namespace LanDataTransmitter {
             ((System.ComponentModel.ISupportInitialize)(this.splContent)).EndInit();
             this.splContent.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -203,9 +232,11 @@ namespace LanDataTransmitter {
         private System.Windows.Forms.Button btnSendText;
         private System.Windows.Forms.SplitContainer splContent;
         private System.Windows.Forms.Button btnStop;
-        private System.Windows.Forms.Label lblClientId;
+        private System.Windows.Forms.Label lblClientInfo;
         private System.Windows.Forms.Label lblBehavior;
         private System.Windows.Forms.Button btnForceDisconnect;
+        private System.Windows.Forms.ComboBox cboSendTo;
+        private System.Windows.Forms.Label lblSendTo;
     }
 }
 

@@ -3,30 +3,30 @@ package protos;
 option csharp_namespace = "LanDataTransmitter";
 
 service Transmitter {
-    rpc Ping (PingRequest) returns (PingReply);
-    rpc Stop (StopRequest) returns (StopReply);
+    rpc Connect (ConnectRequest) returns (ConnectReply);
+    rpc Disconnect (DisconnectRequest) returns (DisconnectReply);
     rpc PushText (PushTextRequest) returns (PushTextReply); // C -> S
     rpc PullText (PullTextRequest) returns (stream PullTextReply); // C <- S
 }
 
-// Ping
+// Connect
 
-message PingRequest {
-    string message = 1;
+message ConnectRequest {
+    string name = 1;
 }
 
-message PingReply {
+message ConnectReply {
     bool accepted = 1;
     string id = 2;
 }
 
-// Stop
+// Disconnect
 
-message StopRequest {
+message DisconnectRequest {
     string id = 1;
 }
 
-message StopReply {
+message DisconnectReply {
     bool accepted = 1;
 }
 
