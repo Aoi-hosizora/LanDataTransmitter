@@ -3,25 +3,40 @@ using System.Collections.Generic;
 
 namespace LanDataTransmitter {
 
-    enum ApplicationBehavior {
-        AS_SERVER,
-        AS_CLIENT,
-    }
+    public enum ApplicationBehavior { AsServer, AsClient }
 
-    static class Global {
+    public static class Global {
 
         public static ApplicationBehavior Behavior;
-        public static GrpcService GrpcService;
 
-        // for server only
-        public static List<string> BindClients { get; } = new List<string>();
+        public static void InitializeServer(GrpcServerService service) {
+            Behavior = ApplicationBehavior.AsServer;
+            Server.Service = service;
+            Server.ConnectedClients = new Dictionary<string, ClientObject>();
+        }
 
-        // public static Dictionary<string, string> ClientNames { get; } = new Dictionary<string, string>();
-        public static Dictionary<string, BidirectionalChannel<PullTextReply, Exception>> PullChannels { get; } =
-            new Dictionary<string, BidirectionalChannel<PullTextReply, Exception>>();
+        public static void InitializeClient(GrpcClientService service) {
+            Behavior = ApplicationBehavior.AsClient;
+            Client.Service = service;
+        }
 
-        // for client only
-        public static string SelfClientId;
+        public static class Server {
+            public static Dictionary<string, ClientObject> ConnectedClients;
+            public static GrpcServerService Service;
+        }
 
+        public static class Client {
+            public static string Id;
+            public static string Name;
+            public static GrpcClientService Service;
+        }
+    }
+
+    public class ClientObject {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public DateTime ConnectedTime { get; set; }
+        public bool Polling { get; set; }
+        public BidChannel<PullTextReply, Exception> Channel { get; set; }
     }
 }
