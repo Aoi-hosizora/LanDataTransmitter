@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using LanDataTransmitter.Util;
 
-namespace LanDataTransmitter {
+namespace LanDataTransmitter.Service {
 
     public enum ApplicationBehavior { AsServer, AsClient }
 
@@ -21,8 +22,8 @@ namespace LanDataTransmitter {
         }
 
         public static class Server {
-            public static Dictionary<string, ClientObject> ConnectedClients;
             public static GrpcServerService Service;
+            public static Dictionary<string, ClientObject> ConnectedClients;
         }
 
         public static class Client {
@@ -37,6 +38,6 @@ namespace LanDataTransmitter {
         public string Name { get; set; }
         public DateTime ConnectedTime { get; set; }
         public bool Polling { get; set; }
-        public BidChannel<PullTextReply, Exception> Channel { get; set; }
+        public BiChannel<PullTextReply, Exception> Channel { get; set; }
     }
 }

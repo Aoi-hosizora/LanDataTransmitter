@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanDataTransmitter.Service;
+using LanDataTransmitter.Util;
 
-namespace LanDataTransmitter {
+namespace LanDataTransmitter.Frm {
 
     public partial class MainForm : Form {
 
@@ -17,22 +19,15 @@ namespace LanDataTransmitter {
         }
 
         private async void MainForm_Load(object sender, EventArgs e) {
-            PrepareUi();
-            await Task.Run(() => {
-                if (Global.Behavior == ApplicationBehavior.AsServer) {
-                    PrepareGrpcServer();
-                } else {
-                    PrepareGrpcClient();
-                }
-            });
-        }
-
-        private void PrepareUi() {
+            lsbRecord.Items.Add("0000000000000");
+            lsbRecord.Items.Add("1111111111111");
+            lsbRecord.Items.Add("2222222222222");
+            lsbRecord.Items.Add("3333333333333");
+            // PrepareUi
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 lblBehavior.Text = $"当前作为服务器，正在监听 {Global.Server.Service.Address}:{Global.Server.Service.Port}";
                 lblClientInfo.Text = "未连接客户端";
                 btnForceDisconnect.Enabled = false;
-                btnForceDisconnect.Visible = true;
                 btnStop.Text = "结束监听";
             } else {
                 lblBehavior.Text = $"当前作为客户端，已连接到 {Global.Client.Service.Address}:{Global.Client.Service.Port}";
@@ -44,15 +39,19 @@ namespace LanDataTransmitter {
                 splContent.Height = cboSendTo.Top + cboSendTo.Height - splContent.Top;
             }
             UpdateButtonsState();
+
+            // PrepareServer
+            await Task.Run(() => {
+                if (Global.Behavior == ApplicationBehavior.AsServer) {
+                    PrepareGrpcServer();
+                } else {
+                    PrepareGrpcClient();
+                }
+            });
         }
 
         private void PrepareGrpcServer() {
             Global.Server.Service.SetupTransmitter(
-                onReceived: req => {
-                    var text = req.Text;
-                    var time = DateTimeOffset.FromUnixTimeSeconds(req.Timestamp).LocalDateTime;
-                    this.InvokeAction(() => lsbRecord.AddToLast($"from {req.Id}: {text} - {time}"));
-                },
                 onConnected: id => {
                     this.InvokeAction(() => {
                         lblClientInfo.Text = $"已连接 {Global.Server.ConnectedClients.Count} 个客户端";
@@ -68,33 +67,44 @@ namespace LanDataTransmitter {
                         cboSendTo.Items.Remove(id);
                         UpdateButtonsState();
                     });
+                },
+                onReceived: req => {
+                    var text = req.Text;
+                    var time = DateTimeOffset.FromUnixTimeSeconds(req.Timestamp).LocalDateTime;
+                    this.InvokeAction(() => lsbRecord.AddToLast($"from {req.Id}: {text} - {time:yyyy-MM-dd HH:mm:ss}"));
                 }
             );
         }
 
         private void PrepareGrpcClient() {
             try {
-                Global.Client.Service.StartReceivingText(reply => {
-                    var text = reply.Text;
-                    var time = DateTimeOffset.FromUnixTimeSeconds(reply.Timestamp).LocalDateTime;
-                    this.InvokeAction(() => lsbRecord.AddToLast($"from server: {text} - {time}"));
-                }).ContinueWith(async _ => {
-                    // 循环结束，一般是由于服务器要求客户端断开连接
-                    try {
-                        await Global.Client.Service.Disconnect();
-                    } catch (Exception) { }
-                    this.InvokeAction(() => {
-                        var ok = this.ShowQuestion("连接已断开", "与服务器的连接已断开，是否关闭本客户端？");
-                        if (ok) {
-                            Close();
-                        } else {
+                Global.Client.Service.StartReceivingText(
+                    onReceived: reply => {
+                        var text = reply.Text;
+                        var time = DateTimeOffset.FromUnixTimeSeconds(reply.Timestamp).LocalDateTime;
+                        this.InvokeAction(() => lsbRecord.AddToLast($"from server: {text} - {time}"));
+                    }
+                ).ContinueWith(
+                    continuationFunction: async t => {
+                        // 服务器要求客户端断开连接 / 客户端主动断开连接
+                        var byClient = await t;
+                        // try {
+                        //     await Global.Client.Service.Disconnect();
+                        // } catch (Exception) { }
+                        this.InvokeAction(() => {
                             lblBehavior.Text = "当前作为客户端，与服务器的连接已断开";
                             btnSendFile.Enabled = false;
                             btnSendText.Enabled = false;
                             btnStop.Enabled = false;
-                        }
-                    });
-                });
+                            if (!byClient) {
+                                var ok = this.ShowQuestion("连接已断开", "与服务器的连接已断开，是否关闭本客户端？");
+                                if (ok) {
+                                    Close();
+                                }
+                            }
+                        });
+                    }
+                );
             } catch (Exception ex) {
                 this.ShowError("初始化失败", $"无法接受来自服务器的推送。\n原因：{ex.Message}");
             }
@@ -103,11 +113,12 @@ namespace LanDataTransmitter {
         private void UpdateButtonsState() {
             var emptyText = edtText.Text.Trim().Length == 0;
             if (Global.Behavior == ApplicationBehavior.AsServer) {
-                var emptyClient = cboSendTo.Items.Count == 0;
-                btnForceDisconnect.Enabled = !emptyClient;
-                btnSendText.Enabled = !emptyClient && !emptyText;
-                btnSendFile.Enabled = !emptyClient;
-                if (!emptyClient && cboSendTo.SelectedItem is null) {
+                var noClient = Global.Server.ConnectedClients.Count == 0;
+                Console.WriteLine(Global.Server.ConnectedClients.Count);
+                btnForceDisconnect.Enabled = !noClient;
+                btnSendText.Enabled = !noClient && !emptyText;
+                btnSendFile.Enabled = !noClient;
+                if (!noClient && cboSendTo.SelectedItem is null) {
                     cboSendTo.SelectedIndex = 0;
                 }
             } else {
@@ -118,6 +129,8 @@ namespace LanDataTransmitter {
 
         private void cboSendTo_SelectedIndexChanged(object sender, EventArgs e) {
             UpdateButtonsState();
+            var selected = (string) cboSendTo.SelectedItem;
+            tipMain.SetToolTip(cboSendTo, selected);
         }
 
         private void edtText_TextChanged(object sender, EventArgs e) {
@@ -193,15 +206,15 @@ namespace LanDataTransmitter {
                 await Task.Run(async () => {
                     try {
                         await Global.Server.Service.ForceDisconnectAll();
-                    } catch (Exception) {
-                        // ignore any exceptions
-                    } finally {
-                        cboSendTo.Items.Clear();
-                        UpdateButtonsState();
+                    } catch (Exception) { } finally {
+                        this.InvokeAction(() => {
+                            cboSendTo.Items.Clear();
+                            lblClientInfo.Text = "未连接客户端";
+                            UpdateButtonsState();
+                        });
                     }
                 });
             }
-            btnForceDisconnect.Enabled = true;
         }
     }
 }

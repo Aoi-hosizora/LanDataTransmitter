@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanDataTransmitter.Service;
+using LanDataTransmitter.Util;
 
-namespace LanDataTransmitter {
+namespace LanDataTransmitter.Frm {
 
     public partial class InitForm : Form {
 

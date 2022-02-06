@@ -28,7 +28,7 @@ namespace LanDataTransmitter {
 
         [System.Diagnostics.DebuggerStepThrough]
         protected override void OnCreateMainForm() {
-            MainForm = InitForm.Instance;
+            MainForm = Frm.InitForm.Instance;
         }
     }
 }

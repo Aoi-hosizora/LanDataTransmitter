@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using ThreadChannels = System.Threading.Channels;
 using System.Threading.Tasks;
+using LanDataTransmitter.Util;
 
-namespace LanDataTransmitter {
+namespace LanDataTransmitter.Service {
 
     public delegate void ReceivedFromServerCallback(PullTextReply reply);
     public delegate void ReceivedFromClientCallback(PushTextRequest request);
@@ -72,7 +73,7 @@ namespace LanDataTransmitter {
             }
         }
 
-        public async Task StartReceivingText(ReceivedFromServerCallback onReceived) {
+        public async Task<bool> StartReceivingText(ReceivedFromServerCallback onReceived) {
             var channel = new GrpcChannel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel);
             IAsyncStreamReader<PullTextReply> stream;
@@ -88,11 +89,11 @@ namespace LanDataTransmitter {
                     throw new Exception("当前客户端暂未连接到服务器，或者连接已经断开，或者当前客户端重复接收消息");
                 }
                 if (reply.Closing) {
-                    // 循环结束，一般是由于服务器要求客户端断开连接
-                    break;
+                    return false; // 被动断开
                 }
                 onReceived?.Invoke(reply); // 回调：客户端收到来自服务器的消息
             }
+            return true; // 主动断开
         }
     } // GrpcClientService
 
@@ -223,7 +224,7 @@ namespace LanDataTransmitter {
             if (name.Length > 0 && Global.Server.ConnectedClients.Any(kv => kv.Value.Name == name)) {
                 return Task.FromResult(new ConnectReply { Accepted = false }); // conflict
             }
-            var obj = new ClientObject { Id = id, Name = name, Channel = new BidChannel<PullTextReply, Exception>(1), ConnectedTime = DateTime.Now };
+            var obj = new ClientObject { Id = id, Name = name, Channel = new BiChannel<PullTextReply, Exception>(1), ConnectedTime = DateTime.Now };
             Global.Server.ConnectedClients[id] = obj;
             _onConnected?.Invoke(id);
             return Task.FromResult(new ConnectReply { Accepted = true, Id = id, Name = name });
@@ -265,4 +266,5 @@ namespace LanDataTransmitter {
             await _pullTextHandler.Invoke(obj, responseStream);
         }
     } // class TransmitterImpl
+
 }

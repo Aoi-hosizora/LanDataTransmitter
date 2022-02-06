@@ -1,5 +1,5 @@
 ﻿
-namespace LanDataTransmitter {
+namespace LanDataTransmitter.Frm {
     partial class InitForm {
         /// <summary>
         /// Required designer variable.
@@ -33,12 +33,12 @@ namespace LanDataTransmitter {
             this.edtAddress = new System.Windows.Forms.TextBox();
             this.lblPort = new System.Windows.Forms.Label();
             this.lblAddress = new System.Windows.Forms.Label();
+            this.lblInterface = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
             this.tipMain = new System.Windows.Forms.ToolTip(this.components);
             this.lblHint = new System.Windows.Forms.Label();
             this.grpBehavior = new System.Windows.Forms.GroupBox();
-            this.lblInterface = new System.Windows.Forms.Label();
             this.grpConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
             this.grpBehavior.SuspendLayout();
@@ -52,7 +52,7 @@ namespace LanDataTransmitter {
             this.rdoServer.Location = new System.Drawing.Point(43, 25);
             this.rdoServer.Name = "rdoServer";
             this.rdoServer.Size = new System.Drawing.Size(92, 22);
-            this.rdoServer.TabIndex = 1;
+            this.rdoServer.TabIndex = 2;
             this.rdoServer.TabStop = true;
             this.rdoServer.Text = "作为服务器";
             this.rdoServer.UseVisualStyleBackColor = true;
@@ -66,7 +66,7 @@ namespace LanDataTransmitter {
             this.rdoClient.Location = new System.Drawing.Point(155, 25);
             this.rdoClient.Name = "rdoClient";
             this.rdoClient.Size = new System.Drawing.Size(92, 22);
-            this.rdoClient.TabIndex = 2;
+            this.rdoClient.TabIndex = 3;
             this.rdoClient.Text = "作为客户端";
             this.rdoClient.UseVisualStyleBackColor = true;
             this.rdoClient.CheckedChanged += new System.EventHandler(this.rdoBehavior_CheckedChanged);
@@ -76,15 +76,15 @@ namespace LanDataTransmitter {
             this.grpConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpConfig.Controls.Add(this.cboInterface);
-            this.grpConfig.Controls.Add(this.numPort);
+            this.grpConfig.Controls.Add(this.lblInterface);
+            this.grpConfig.Controls.Add(this.lblAddress);
             this.grpConfig.Controls.Add(this.edtAddress);
             this.grpConfig.Controls.Add(this.lblPort);
-            this.grpConfig.Controls.Add(this.lblAddress);
-            this.grpConfig.Controls.Add(this.lblInterface);
+            this.grpConfig.Controls.Add(this.numPort);
             this.grpConfig.Location = new System.Drawing.Point(12, 76);
             this.grpConfig.Name = "grpConfig";
             this.grpConfig.Size = new System.Drawing.Size(280, 115);
-            this.grpConfig.TabIndex = 3;
+            this.grpConfig.TabIndex = 4;
             this.grpConfig.TabStop = false;
             this.grpConfig.Text = "连接配置";
             // 
@@ -94,11 +94,12 @@ namespace LanDataTransmitter {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.cboInterface.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboInterface.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cboInterface.Font = new System.Drawing.Font("Microsoft YaHei UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboInterface.FormattingEnabled = true;
-            this.cboInterface.Location = new System.Drawing.Point(47, 22);
+            this.cboInterface.Location = new System.Drawing.Point(47, 23);
             this.cboInterface.Name = "cboInterface";
-            this.cboInterface.Size = new System.Drawing.Size(227, 25);
-            this.cboInterface.TabIndex = 4;
+            this.cboInterface.Size = new System.Drawing.Size(227, 24);
+            this.cboInterface.TabIndex = 6;
             this.cboInterface.SelectedIndexChanged += new System.EventHandler(this.cboInterface_SelectedIndexChanged);
             // 
             // numPort
@@ -116,7 +117,7 @@ namespace LanDataTransmitter {
             0});
             this.numPort.Name = "numPort";
             this.numPort.Size = new System.Drawing.Size(92, 23);
-            this.numPort.TabIndex = 8;
+            this.numPort.TabIndex = 10;
             this.numPort.Value = new decimal(new int[] {
             10240,
             0,
@@ -131,7 +132,7 @@ namespace LanDataTransmitter {
             this.edtAddress.Name = "edtAddress";
             this.edtAddress.ReadOnly = true;
             this.edtAddress.Size = new System.Drawing.Size(174, 23);
-            this.edtAddress.TabIndex = 6;
+            this.edtAddress.TabIndex = 8;
             this.edtAddress.Text = "0.0.0.0";
             // 
             // lblPort
@@ -140,7 +141,7 @@ namespace LanDataTransmitter {
             this.lblPort.Location = new System.Drawing.Point(6, 85);
             this.lblPort.Name = "lblPort";
             this.lblPort.Size = new System.Drawing.Size(63, 17);
-            this.lblPort.TabIndex = 7;
+            this.lblPort.TabIndex = 9;
             this.lblPort.Text = "监听端口 :";
             // 
             // lblAddress
@@ -149,8 +150,16 @@ namespace LanDataTransmitter {
             this.lblAddress.Location = new System.Drawing.Point(6, 56);
             this.lblAddress.Name = "lblAddress";
             this.lblAddress.Size = new System.Drawing.Size(91, 17);
-            this.lblAddress.TabIndex = 5;
+            this.lblAddress.TabIndex = 7;
             this.lblAddress.Text = "IPv4 网络地址 :";
+            // 
+            // lblInterface
+            // 
+            this.lblInterface.Location = new System.Drawing.Point(6, 26);
+            this.lblInterface.Name = "lblInterface";
+            this.lblInterface.Size = new System.Drawing.Size(268, 18);
+            this.lblInterface.TabIndex = 5;
+            this.lblInterface.Text = "接口 :";
             // 
             // btnStart
             // 
@@ -159,7 +168,7 @@ namespace LanDataTransmitter {
             this.btnStart.Location = new System.Drawing.Point(136, 199);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 25);
-            this.btnStart.TabIndex = 10;
+            this.btnStart.TabIndex = 12;
             this.btnStart.Text = "开始";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
@@ -172,7 +181,7 @@ namespace LanDataTransmitter {
             this.btnExit.Location = new System.Drawing.Point(217, 199);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 25);
-            this.btnExit.TabIndex = 11;
+            this.btnExit.TabIndex = 13;
             this.btnExit.Text = "退出";
             this.btnExit.UseVisualStyleBackColor = true;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
@@ -184,7 +193,7 @@ namespace LanDataTransmitter {
             this.lblHint.Location = new System.Drawing.Point(65, 203);
             this.lblHint.Name = "lblHint";
             this.lblHint.Size = new System.Drawing.Size(65, 17);
-            this.lblHint.TabIndex = 9;
+            this.lblHint.TabIndex = 11;
             this.lblHint.Text = "尝试监听...";
             this.lblHint.Visible = false;
             // 
@@ -197,17 +206,9 @@ namespace LanDataTransmitter {
             this.grpBehavior.Location = new System.Drawing.Point(12, 12);
             this.grpBehavior.Name = "grpBehavior";
             this.grpBehavior.Size = new System.Drawing.Size(280, 58);
-            this.grpBehavior.TabIndex = 12;
+            this.grpBehavior.TabIndex = 1;
             this.grpBehavior.TabStop = false;
             this.grpBehavior.Text = "Windows 端的行为";
-            // 
-            // lblInterface
-            // 
-            this.lblInterface.Location = new System.Drawing.Point(6, 25);
-            this.lblInterface.Name = "lblInterface";
-            this.lblInterface.Size = new System.Drawing.Size(268, 17);
-            this.lblInterface.TabIndex = 9;
-            this.lblInterface.Text = "接口 :";
             // 
             // InitForm
             // 
@@ -217,10 +218,10 @@ namespace LanDataTransmitter {
             this.CancelButton = this.btnExit;
             this.ClientSize = new System.Drawing.Size(304, 233);
             this.Controls.Add(this.grpBehavior);
-            this.Controls.Add(this.lblHint);
-            this.Controls.Add(this.btnExit);
-            this.Controls.Add(this.btnStart);
             this.Controls.Add(this.grpConfig);
+            this.Controls.Add(this.lblHint);
+            this.Controls.Add(this.btnStart);
+            this.Controls.Add(this.btnExit);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
