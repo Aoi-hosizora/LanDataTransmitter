@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LanDataTransmitter.Frm.View;
 using LanDataTransmitter.Service;
 using LanDataTransmitter.Util;
 
@@ -19,10 +20,11 @@ namespace LanDataTransmitter.Frm {
         }
 
         private async void MainForm_Load(object sender, EventArgs e) {
-            lsbRecord.Items.Add("0000000000000");
-            lsbRecord.Items.Add("1111111111111");
-            lsbRecord.Items.Add("2222222222222");
-            lsbRecord.Items.Add("3333333333333");
+            lsvRecord.AppendItem("000000", "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz ab\ncdefghijklmnopqrstuvwxyz");
+            lsvRecord.AppendItem("111111", "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz ab\ncdefghijklmnopqrstuvwxyz", right: true);
+            lsvRecord.AppendItem("222222", "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz ab\ncdefghijklmnopqrstuvwxyz");
+            lsvRecord.AppendItem("333333", "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz ab\ncdefghijklmnopqrstuvwxyz", right: true);
+
             // PrepareUi
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 lblBehavior.Text = $"当前作为服务器，正在监听 {Global.Server.Service.Address}:{Global.Server.Service.Port}";
@@ -38,6 +40,7 @@ namespace LanDataTransmitter.Frm {
                 cboSendTo.Visible = false;
                 splContent.Height = cboSendTo.Top + cboSendTo.Height - splContent.Top;
             }
+            cmsListView.Renderer = new NativeRenderer();
             UpdateButtonsState();
 
             // PrepareServer
@@ -71,7 +74,7 @@ namespace LanDataTransmitter.Frm {
                 onReceived: req => {
                     var text = req.Text;
                     var time = DateTimeOffset.FromUnixTimeSeconds(req.Timestamp).LocalDateTime;
-                    this.InvokeAction(() => lsbRecord.AddToLast($"from {req.Id}: {text} - {time:yyyy-MM-dd HH:mm:ss}"));
+                    this.InvokeAction(() => lsvRecord.AppendItem($"from {req.Id} - {time:yyyy-MM-dd HH:mm:ss}", text));
                 }
             );
         }
@@ -82,7 +85,7 @@ namespace LanDataTransmitter.Frm {
                     onReceived: reply => {
                         var text = reply.Text;
                         var time = DateTimeOffset.FromUnixTimeSeconds(reply.Timestamp).LocalDateTime;
-                        this.InvokeAction(() => lsbRecord.AddToLast($"from server: {text} - {time}"));
+                        this.InvokeAction(() => lsvRecord.AppendItem($"from server - {time:yyyy-MM-dd HH:mm:ss}", text));
                     }
                 ).ContinueWith(
                     continuationFunction: async t => {
@@ -138,7 +141,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private async void btnSendText_Click(object sender, EventArgs e) {
-            var content = edtText.Text.Trim();
+            var text = edtText.Text.Trim();
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 if (!(cboSendTo.SelectedItem is string id) || id.Length == 0) {
                     return;
@@ -146,10 +149,10 @@ namespace LanDataTransmitter.Frm {
                 await Task.Run(async () => {
                     try {
                         var now = DateTime.Now;
-                        await Global.Server.Service.SendText(id, content, now);
+                        await Global.Server.Service.SendText(id, text, now);
                         this.InvokeAction(() => {
                             edtText.Text = "";
-                            lsbRecord.AddToLast($"to {id}: {content} - {now}");
+                            lsvRecord.AppendItem($"to {id} - {now:yyyy-MM-dd HH:mm:ss}", text);
                         });
                     } catch (Exception ex) {
                         this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至客户端失败。\n原因：{ex.Message}"));
@@ -159,10 +162,10 @@ namespace LanDataTransmitter.Frm {
                 await Task.Run(async () => {
                     try {
                         var now = DateTime.Now;
-                        await Global.Client.Service.SendText(content, now);
+                        await Global.Client.Service.SendText(text, now);
                         this.InvokeAction(() => {
                             edtText.Text = "";
-                            lsbRecord.AddToLast($"to server: {content} - {now}");
+                            lsvRecord.AppendItem($"to server - {now:yyyy-MM-dd HH:mm:ss}", text);
                         });
                     } catch (Exception ex) {
                         this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至服务器失败。\n原因：{ex.Message}"));
@@ -214,6 +217,33 @@ namespace LanDataTransmitter.Frm {
                         });
                     }
                 });
+            }
+        }
+
+        private void tsmTextDetail_Click(object sender, EventArgs e) {
+            if (lsvRecord.SelectedItems.Count == 0) {
+                return;
+            }
+            this.ShowInfo("文本详情", "TODO");
+        }
+
+        private void tsmCopyInfo_Click(object sender, EventArgs e) {
+            if (lsvRecord.SelectedItems.Count == 0) {
+                return;
+            }
+            var item = lsvRecord.SelectedItems[0];
+            if (item.Tag is CustomListView.CustomListViewObject obj) {
+                Clipboard.SetText(obj.Line1);
+            }
+        }
+
+        private void tsmCopyText_Click(object sender, EventArgs e) {
+            if (lsvRecord.SelectedItems.Count == 0) {
+                return;
+            }
+            var item = lsvRecord.SelectedItems[0];
+            if (item.Tag is CustomListView.CustomListViewObject obj) {
+                Clipboard.SetText(obj.Line2);
             }
         }
     }

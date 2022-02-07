@@ -135,9 +135,10 @@
     <Compile Include="Frm\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Frm\View\CustomListBox.cs">
+    <Compile Include="Frm\View\CustomListView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Frm\View\NativeRenderer.cs" />
     <Compile Include="Frm\View\PlaceholderTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

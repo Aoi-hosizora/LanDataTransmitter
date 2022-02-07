@@ -11,13 +11,7 @@ namespace LanDataTransmitter.Util {
             } else {
                 action?.Invoke();
             }
-        }
-
-        public static void AddToLast(this ListBox list, object item) {
-            list.Items.Add(item);
-            list.ClearSelected();
-            list.SelectedIndex = list.Items.Count - 1;
-        }
+        } 
 
         public static void ShowError(this Form _, string title, string message) {
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);

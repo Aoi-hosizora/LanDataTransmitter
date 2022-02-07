@@ -18,8 +18,8 @@ namespace LanDataTransmitter {
 
         [System.Diagnostics.DebuggerStepThrough]
         public Program() {
-            Thread.CurrentThread.CurrentCulture = CultureInfo.CurrentCulture; // CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture; // CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture; // CultureInfo.CurrentCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture; // CultureInfo.CurrentCulture;
             // IsSingleInstance = true;
             EnableVisualStyles = true;
             SaveMySettingsOnExit = true;

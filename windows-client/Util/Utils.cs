@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace LanDataTransmitter.Util {
 
@@ -47,5 +48,18 @@ namespace LanDataTransmitter.Util {
         public static string GenerateGlobalId() {
             return Guid.NewGuid().ToString();
         }
-    }
+    } // Utils
+
+    internal static class NativeMethods {
+        public const long SB_HORZ = 0;
+        public const long SB_VERT = 1;
+        public const long SB_BOTH = 3;
+
+        [DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
+        public static extern int SetWindowTheme(IntPtr hwnd, string pszSubAppName, string pszSubIdList);
+
+        [DllImport("user32.dll")]
+        public static extern bool ShowScrollBar(IntPtr hWnd, int wBar, [MarshalAs(UnmanagedType.Bool)] bool bShow);
+
+    } // NativeMethods
 }
