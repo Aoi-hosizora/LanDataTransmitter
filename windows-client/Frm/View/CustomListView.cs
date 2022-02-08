@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Frm.View {
+
     public class CustomListView : ListView {
 
         private readonly ColumnHeader _dummyHeader;
@@ -18,7 +19,7 @@ namespace LanDataTransmitter.Frm.View {
             base.Columns.Add(_dummyHeader);
             _dummyHeader.Width = ClientSize.Width;
 
-            _dummyImgList = new ImageList { ImageSize = new Size(1, 42) };
+            _dummyImgList = new ImageList { ImageSize = new Size(1, TwiceFontHeight) };
             base.SmallImageList = _dummyImgList;
             _dummyImgList.ImageSize = new Size(1, TwiceFontHeight);
         }
@@ -55,7 +56,7 @@ namespace LanDataTransmitter.Frm.View {
             _oldWidth = ClientSize.Width;
         }
 
-        private int TwiceFontHeight => Font.Height * 2 + 8;
+        private int TwiceFontHeight => Font.Height * 2 + 10;
 
         protected override void OnFontChanged(EventArgs e) {
             base.OnFontChanged(e);

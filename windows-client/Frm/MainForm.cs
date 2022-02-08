@@ -40,7 +40,8 @@ namespace LanDataTransmitter.Frm {
                 cboSendTo.Visible = false;
                 splContent.Height = cboSendTo.Top + cboSendTo.Height - splContent.Top;
             }
-            cmsListView.Renderer = new NativeRenderer();
+            cboSendTo.EnableComboBoxTooltip(tipMain);
+            cmsListView.Renderer = new MenuNativeRenderer();
             UpdateButtonsState();
 
             // PrepareServer
@@ -51,6 +52,23 @@ namespace LanDataTransmitter.Frm {
                     PrepareGrpcClient();
                 }
             });
+        }
+
+        private void UpdateButtonsState() {
+            var emptyText = edtText.Text.Trim().Length == 0;
+            if (Global.Behavior == ApplicationBehavior.AsServer) {
+                var noClient = Global.Server.ConnectedClients.Count == 0;
+                Console.WriteLine(Global.Server.ConnectedClients.Count);
+                btnForceDisconnect.Enabled = !noClient;
+                btnSendText.Enabled = !noClient && !emptyText;
+                btnSendFile.Enabled = !noClient;
+                if (!noClient && cboSendTo.SelectedItem is null) {
+                    cboSendTo.SelectedIndex = 0;
+                }
+            } else {
+                btnSendText.Enabled = !emptyText;
+                btnSendFile.Enabled = true;
+            }
         }
 
         private void PrepareGrpcServer() {
@@ -91,6 +109,7 @@ namespace LanDataTransmitter.Frm {
                     continuationFunction: async t => {
                         // 服务器要求客户端断开连接 / 客户端主动断开连接
                         var byClient = await t;
+                        // TODO
                         // try {
                         //     await Global.Client.Service.Disconnect();
                         // } catch (Exception) { }
@@ -111,71 +130,6 @@ namespace LanDataTransmitter.Frm {
             } catch (Exception ex) {
                 this.ShowError("初始化失败", $"无法接受来自服务器的推送。\n原因：{ex.Message}");
             }
-        }
-
-        private void UpdateButtonsState() {
-            var emptyText = edtText.Text.Trim().Length == 0;
-            if (Global.Behavior == ApplicationBehavior.AsServer) {
-                var noClient = Global.Server.ConnectedClients.Count == 0;
-                Console.WriteLine(Global.Server.ConnectedClients.Count);
-                btnForceDisconnect.Enabled = !noClient;
-                btnSendText.Enabled = !noClient && !emptyText;
-                btnSendFile.Enabled = !noClient;
-                if (!noClient && cboSendTo.SelectedItem is null) {
-                    cboSendTo.SelectedIndex = 0;
-                }
-            } else {
-                btnSendText.Enabled = !emptyText;
-                btnSendFile.Enabled = true;
-            }
-        }
-
-        private void cboSendTo_SelectedIndexChanged(object sender, EventArgs e) {
-            UpdateButtonsState();
-            var selected = (string) cboSendTo.SelectedItem;
-            tipMain.SetToolTip(cboSendTo, selected);
-        }
-
-        private void edtText_TextChanged(object sender, EventArgs e) {
-            UpdateButtonsState();
-        }
-
-        private async void btnSendText_Click(object sender, EventArgs e) {
-            var text = edtText.Text.Trim();
-            if (Global.Behavior == ApplicationBehavior.AsServer) {
-                if (!(cboSendTo.SelectedItem is string id) || id.Length == 0) {
-                    return;
-                }
-                await Task.Run(async () => {
-                    try {
-                        var now = DateTime.Now;
-                        await Global.Server.Service.SendText(id, text, now);
-                        this.InvokeAction(() => {
-                            edtText.Text = "";
-                            lsvRecord.AppendItem($"to {id} - {now:yyyy-MM-dd HH:mm:ss}", text);
-                        });
-                    } catch (Exception ex) {
-                        this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至客户端失败。\n原因：{ex.Message}"));
-                    }
-                });
-            } else {
-                await Task.Run(async () => {
-                    try {
-                        var now = DateTime.Now;
-                        await Global.Client.Service.SendText(text, now);
-                        this.InvokeAction(() => {
-                            edtText.Text = "";
-                            lsvRecord.AppendItem($"to server - {now:yyyy-MM-dd HH:mm:ss}", text);
-                        });
-                    } catch (Exception ex) {
-                        this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至服务器失败。\n原因：{ex.Message}"));
-                    }
-                });
-            }
-        }
-
-        private void btnSendFile_Click(object sender, EventArgs e) {
-            // TODO
         }
 
         private async void btnStop_Click(object sender, EventArgs e) {
@@ -220,11 +174,55 @@ namespace LanDataTransmitter.Frm {
             }
         }
 
+        private void edtText_TextChanged(object sender, EventArgs e) {
+            UpdateButtonsState();
+        }
+
+        private async void btnSendText_Click(object sender, EventArgs e) {
+            // TODO
+            var text = edtText.Text.Trim();
+            if (Global.Behavior == ApplicationBehavior.AsServer) {
+                if (!(cboSendTo.SelectedItem is string id) || id.Length == 0) {
+                    return;
+                }
+                await Task.Run(async () => {
+                    try {
+                        var now = DateTime.Now;
+                        await Global.Server.Service.SendText(id, text, now);
+                        this.InvokeAction(() => {
+                            edtText.Text = "";
+                            lsvRecord.AppendItem($"to {id} - {now:yyyy-MM-dd HH:mm:ss}", text);
+                        });
+                    } catch (Exception ex) {
+                        this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至客户端失败。\n原因：{ex.Message}"));
+                    }
+                });
+            } else {
+                await Task.Run(async () => {
+                    try {
+                        var now = DateTime.Now;
+                        await Global.Client.Service.SendText(text, now);
+                        this.InvokeAction(() => {
+                            edtText.Text = "";
+                            lsvRecord.AppendItem($"to server - {now:yyyy-MM-dd HH:mm:ss}", text);
+                        });
+                    } catch (Exception ex) {
+                        this.InvokeAction(() => this.ShowError("发送失败", $"发送文本至服务器失败。\n原因：{ex.Message}"));
+                    }
+                });
+            }
+        }
+
+        private void btnSendFile_Click(object sender, EventArgs e) {
+            // TODO
+        }
+
         private void tsmTextDetail_Click(object sender, EventArgs e) {
             if (lsvRecord.SelectedItems.Count == 0) {
                 return;
             }
             this.ShowInfo("文本详情", "TODO");
+            // TODO
         }
 
         private void tsmCopyInfo_Click(object sender, EventArgs e) {

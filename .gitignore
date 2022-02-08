@@ -3,7 +3,8 @@
 .ionide/
 .history/
 .idea/
-.vs
+.vs/
+temp/
 
 ### Windows ###
 packages/

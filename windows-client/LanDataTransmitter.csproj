@@ -138,7 +138,7 @@
     <Compile Include="Frm\View\CustomListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Frm\View\NativeRenderer.cs" />
+    <Compile Include="Frm\View\MenuNativeRenderer.cs" />
     <Compile Include="Frm\View\PlaceholderTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

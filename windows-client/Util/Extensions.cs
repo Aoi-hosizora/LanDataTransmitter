@@ -11,7 +11,14 @@ namespace LanDataTransmitter.Util {
             } else {
                 action?.Invoke();
             }
-        } 
+        }
+
+        public static void EnableComboBoxTooltip(this ComboBox cbo, ToolTip tip) {
+            cbo.SelectedIndexChanged += (sender, e) => {
+                var selected = (string) cbo.SelectedItem;
+                tip.SetToolTip(cbo, selected);
+            };
+        }
 
         public static void ShowError(this Form _, string title, string message) {
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
