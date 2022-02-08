@@ -145,7 +145,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\Global.cs" />
-    <Compile Include="Service\Service.cs" />
+    <Compile Include="Service\GrpcClientService.cs" />
+    <Compile Include="Service\GrpcServerService.cs" />
     <Compile Include="Util\BiChannel.cs" />
     <Compile Include="Util\Extensions.cs" />
     <Compile Include="Util\Utils.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -192,5 +194,4 @@
   <ItemGroup>
     <Protobuf Include="..\protos\*.proto" />
   </ItemGroup>
-  <ItemGroup />
 </Project>

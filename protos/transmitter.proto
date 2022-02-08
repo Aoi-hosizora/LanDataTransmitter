@@ -12,19 +12,18 @@ service Transmitter {
 // Connect
 
 message ConnectRequest {
-    string name = 1;
+    string clientName = 1;
 }
 
 message ConnectReply {
     bool accepted = 1;
-    string id = 2;
-    string name = 3;
+    string clientId = 2;
 }
 
 // Disconnect
 
 message DisconnectRequest {
-    string id = 1;
+    string clientId = 1;
 }
 
 message DisconnectReply {
@@ -34,24 +33,26 @@ message DisconnectReply {
 // PushText (C -> S)
 
 message PushTextRequest {
-    string id = 1;
+    string clientId = 1;
     string text = 2;
     int64 timestamp = 3;
 }
 
 message PushTextReply {
     bool accepted = 1;
+    string messageId = 2;
 }
 
 // PullText (C <- S)
 
 message PullTextRequest {
-    string id = 1;
+    string clientId = 1;
 }
 
 message PullTextReply {
     bool accepted = 1;
-    bool closing = 2;
-    string text = 3;
-    int64 timestamp = 4;
+    bool closing = 2; // S requires C to close
+    string messageId = 3;
+    string text = 4;
+    int64 timestamp = 5;
 }

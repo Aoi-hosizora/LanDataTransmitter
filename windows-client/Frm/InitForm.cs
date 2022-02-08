@@ -62,7 +62,7 @@ namespace LanDataTransmitter.Frm {
                     } else {
                         var (addr, port, name) = (edtTargetAddress.Text.Trim(), (int) numTargetPort.Value, edtClientName.Text.Trim());
                         var service = new GrpcClientService(addr, port);
-                        var id = await service.Connect(name); // TODO
+                        var id = await service.Connect(name);
                         this.InvokeAction(() => Global.InitializeClient(id, name, service));
                     }
                     this.InvokeAction(() => {

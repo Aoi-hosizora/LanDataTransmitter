@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -41,13 +42,31 @@ namespace LanDataTransmitter.Util {
             return address;
         }
 
-        public static string GetNowString() {
-            return DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        public static long ToTimestamp(DateTime time) {
+            return new DateTimeOffset(time).ToUnixTimeSeconds();
+        }
+
+        public static DateTime FromTimestamp(long timestamp) {
+            return DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
         }
 
         public static string GenerateGlobalId() {
             return Guid.NewGuid().ToString();
         }
+
+        public static bool ValidIpv4Address(string address) {
+            return IPAddress.TryParse(address, out _);
+        }
+
+        public static string ConcatIdAndName(string id, string name) {
+            return name == "" ? id : $"{id} ({name})";
+        }
+
+        public static Tuple<string, string> ExtractIdAndName(string s) {
+            var sp = s.Split(' ');
+            return new Tuple<string, string>(sp.Length == 0 ? "" : sp[0], sp.Length <= 1 ? "" : sp[1]);
+        }
+
     } // Utils
 
     internal static class NativeMethods {
