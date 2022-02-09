@@ -51,7 +51,6 @@ namespace LanDataTransmitter.Service {
         }
 
         public async Task DisconnectAll(string message = null) {
-            // TODO
             message ??= "服务器要求断开连接";
             foreach (var id in Global.Server.ConnectedClients.Keys) {
                 var chan = Global.Server.ConnectedClients[id].Channel;
@@ -82,8 +81,8 @@ namespace LanDataTransmitter.Service {
             } catch (Exception ex) {
                 throw new Exception("无法连接到服务器：" + ex.Message);
             }
-            var record = MessageRecord.CreateForMessageFromServer(messageId, text, timestamp);
-            Global.MessagesFromServer.Add(record); // <<<
+            var record = MessageRecord.CreateForStCMessage(clientId, obj.Name, messageId, text, timestamp);
+            Global.StCMessages.Add(record); // <<<
             return record; // 通过返回值通知调用方：消息发送成功 (-> C)
         }
 
@@ -160,8 +159,8 @@ namespace LanDataTransmitter.Service {
 
         public override Task<PushTextReply> PushText(PushTextRequest request, ServerCallContext context) {
             // !!!!!!
-            var id = request.ClientId;
-            if (!Global.Server.ConnectedClients.ContainsKey(id)) {
+            var contains = Global.Server.ConnectedClients.TryGetValue(request.ClientId, out var obj);
+            if (!contains) {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // not connect yet
             }
             var text = request.Text.Trim();
@@ -169,8 +168,8 @@ namespace LanDataTransmitter.Service {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // empty text
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = MessageRecord.CreateForMessageFromClient(messageId, text, request.Timestamp);
-            Global.MessagesFromClient.Add(record); // <<<
+            var record = MessageRecord.CreateForCtSMessage(obj.Id, obj.Name, messageId, text, request.Timestamp);
+            Global.CtSMessages.Add(record); // <<<
             _onReceived?.Invoke(record); // 通过回调通知调用方：成功收到消息 (<- C)
             return Task.FromResult(new PushTextReply { Accepted = true });
         }

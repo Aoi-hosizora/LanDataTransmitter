@@ -44,6 +44,7 @@ namespace LanDataTransmitter.Frm {
             this.lblSendTo = new System.Windows.Forms.Label();
             this.tipMain = new System.Windows.Forms.ToolTip(this.components);
             this.lblRecord = new System.Windows.Forms.Label();
+            this.btnRestart = new System.Windows.Forms.Button();
             this.grpState.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splContent)).BeginInit();
             this.splContent.Panel1.SuspendLayout();
@@ -58,6 +59,7 @@ namespace LanDataTransmitter.Frm {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpState.Controls.Add(this.lblBehavior);
             this.grpState.Controls.Add(this.lblClientInfo);
+            this.grpState.Controls.Add(this.btnRestart);
             this.grpState.Controls.Add(this.btnForceDisconnect);
             this.grpState.Controls.Add(this.btnStop);
             this.grpState.Location = new System.Drawing.Point(12, 12);
@@ -254,6 +256,18 @@ namespace LanDataTransmitter.Frm {
             this.lblRecord.TabIndex = 5;
             this.lblRecord.Text = "消息收发记录：(共收到 0 条消息，已发送 0 条消息)";
             // 
+            // btnRestart
+            // 
+            this.btnRestart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnRestart.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnRestart.Location = new System.Drawing.Point(6, 69);
+            this.btnRestart.Name = "btnRestart";
+            this.btnRestart.Size = new System.Drawing.Size(75, 25);
+            this.btnRestart.TabIndex = 3;
+            this.btnRestart.Text = "重新监听";
+            this.btnRestart.UseVisualStyleBackColor = true;
+            this.btnRestart.Click += new System.EventHandler(this.btnRestart_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -272,6 +286,7 @@ namespace LanDataTransmitter.Frm {
             this.MinimumSize = new System.Drawing.Size(400, 400);
             this.Name = "MainForm";
             this.Text = "LAN Data Transmitter";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.grpState.ResumeLayout(false);
             this.grpState.PerformLayout();
@@ -307,6 +322,7 @@ namespace LanDataTransmitter.Frm {
         private System.Windows.Forms.ToolStripMenuItem tsmTextDetail;
         private System.Windows.Forms.ToolStripSeparator tssFirst;
         private System.Windows.Forms.Label lblRecord;
+        private System.Windows.Forms.Button btnRestart;
     }
 }
 

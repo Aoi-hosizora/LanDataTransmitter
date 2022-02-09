@@ -16,7 +16,12 @@ namespace LanDataTransmitter.Frm {
         private static InitForm _instance;
 
         public static InitForm Instance {
-            get { return _instance ??= new InitForm(); }
+            get {
+                if (_instance == null || _instance.IsDisposed) {
+                    _instance = new InitForm();
+                }
+                return _instance;
+            }
         }
 
         private void InitForm_Load(object sender, EventArgs e) {
@@ -24,7 +29,6 @@ namespace LanDataTransmitter.Frm {
             Height -= grpClient.Top - grpServer.Top;
             grpClient.Top = grpServer.Top;
             rdoServer.Checked = true;
-            rdoBehavior_CheckedChanged(rdoServer, EventArgs.Empty);
             cboServeInterface.EnableComboBoxTooltip(tipMain);
 
             // interface
@@ -58,12 +62,12 @@ namespace LanDataTransmitter.Frm {
                         var (addr, port) = (edtServeAddress.Text.Trim(), (int) numServePort.Value);
                         var service = new GrpcServerService(addr, port);
                         await service.Serve();
-                        this.InvokeAction(() => Global.InitializeServer(service));
+                        this.InvokeAction(() => Global.InitializeServer(service)); // => ApplicationState.Running
                     } else {
                         var (addr, port, name) = (edtTargetAddress.Text.Trim(), (int) numTargetPort.Value, edtClientName.Text.Trim());
                         var service = new GrpcClientService(addr, port);
                         var id = await service.Connect(name);
-                        this.InvokeAction(() => Global.InitializeClient(id, name, service));
+                        this.InvokeAction(() => Global.InitializeClient(id, name, service)); // => ApplicationState.Running
                     }
                     this.InvokeAction(() => {
                         MainForm.Instance.Show();

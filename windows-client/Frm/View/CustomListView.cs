@@ -115,16 +115,17 @@ namespace LanDataTransmitter.Frm.View {
             if (index < Items.Count) {
                 SelectedIndices.Add(index);
             }
+            Items[index].EnsureVisible();
         }
 
         public void AppendItem(string line1, string line2, bool right = false) {
             var obj = new CustomListViewObject { Line1 = line1, Line2 = line2, AlignRight = right };
             if (!right) {
-                line1 = "< " + line1;
+                line1 = "> " + line1;
             } else {
-                line1 += " >";
+                line1 += " <";
             }
-            line2 = line2.Replace("\n", "↴");
+            line2 = line2.Replace("\r\n", "↴").Replace("\n", "↴");
             var lvi = new ListViewItem { Text = line1 + Environment.NewLine + line2, Tag = obj };
             Items.Add(lvi);
             SetSingleSelected(Items.Count - 1);

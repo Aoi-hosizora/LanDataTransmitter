@@ -74,8 +74,8 @@ namespace LanDataTransmitter.Service {
             if (!reply.Accepted) {
                 throw new Exception("当前客户端暂未连接到服务器，或者连接已经断开");
             }
-            var record = MessageRecord.CreateForMessageFromClient(reply.MessageId, text, timestamp);
-            Global.MessagesFromClient.Add(record); // <<<
+            var record = MessageRecord.CreateForCtSMessage(Global.Client.Id, Global.Client.Name, reply.MessageId, text, timestamp);
+            Global.CtSMessages.Add(record); // <<<
             return record; // 通过返回值通知调用方：消息发送成功 (-> S)
         }
 
@@ -97,8 +97,8 @@ namespace LanDataTransmitter.Service {
                     await channel.ShutdownAsync();
                     return false; // 被动断开
                 }
-                var record = MessageRecord.CreateForMessageFromServer(reply.MessageId, reply.Text, reply.Timestamp);
-                Global.MessagesFromServer.Add(record); // <<<
+                var record = MessageRecord.CreateForStCMessage(Global.Client.Id, Global.Client.Name, reply.MessageId, reply.Text, reply.Timestamp);
+                Global.StCMessages.Add(record); // <<<
                 onReceived?.Invoke(record); // 通过回调通知调用方：成功收到消息 (<- S)
             }
             await channel.ShutdownAsync();
