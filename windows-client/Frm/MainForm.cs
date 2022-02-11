@@ -24,15 +24,17 @@ namespace LanDataTransmitter.Frm {
             }
         }
 
-        #region Load and UpdateUI
+        #region Load, Update UI
 
         private void MainForm_Load(object sender, EventArgs e) {
             // ui
             if (Global.Behavior == ApplicationBehavior.AsServer) {
+                Text = "LAN Data Transmitter (服务器)";
                 grpState.Text = "服务器状态";
                 btnRestart.Text = "重新监听";
                 btnStop.Text = "结束监听";
             } else {
+                Text = "LAN Data Transmitter (客户端)";
                 grpState.Text = "客户端状态";
                 btnRestart.Text = "重新连接";
                 btnStop.Text = "断开连接";
@@ -84,7 +86,7 @@ namespace LanDataTransmitter.Frm {
                     lblBehavior.Text = "当前作为服务器，服务器的监听已停止";
                     lblClientInfo.Text = "";
                 }
-                lblRecord.Text = $"消息收发记录：(共收到 {Global.CtSMessages.Count} 条消息，已发送 {Global.StCMessages.Count} 条消息)";
+                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.CtSCount} 条消息，已发送 {Global.Messages.StCCount} 条消息)";
             } else {
                 if (Global.State == ApplicationState.Running) {
                     lblBehavior.Text = $"当前作为客户端，已连接到 {Global.Client.Service.Address}:{Global.Client.Service.Port}";
@@ -92,33 +94,36 @@ namespace LanDataTransmitter.Frm {
                     lblBehavior.Text = "当前作为客户端，与服务器的连接已断开";
                 }
                 lblClientInfo.Text = $"标识：{Global.Client.Id}" + (Global.Client.Name == "" ? "" : $"，名称：{Global.Client.Name}");
-                lblRecord.Text = $"消息收发记录：(共收到 {Global.StCMessages.Count} 条消息，已发送 {Global.CtSMessages.Count} 条消息)";
+                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.StCCount} 条消息，已发送 {Global.Messages.CtSCount} 条消息)";
             }
         }
 
         #endregion
 
-        #region Prepare and Stop and Close
+        #region Prepare, Stop, Close
 
         private void PrepareGrpcServer() {
             Global.Server.Service.SetupTransmitter(
-                onConnected: (id, name) => {
+                onConnected: obj => {
+                    Global.Server.ConnectedClients.Add(obj.Id, obj);
                     this.InvokeAction(() => {
-                        cboSendTo.Items.Add(Utils.ConcatIdAndName(id, name));
+                        cboSendTo.Items.Add(obj.FullDisplayName);
                         UpdateButtonsState();
                         UpdateLabelsState();
                     });
                 },
-                onDisconnected: (id, name) => {
+                onDisconnected: obj => {
+                    Global.Server.ConnectedClients.Remove(obj.Id);
                     this.InvokeAction(() => {
-                        cboSendTo.Items.Remove(Utils.ConcatIdAndName(id, name));
+                        cboSendTo.Items.Remove(obj.FullDisplayName);
                         UpdateButtonsState();
                         UpdateLabelsState();
                     });
                 },
                 onReceived: r => {
+                    Global.Messages.AddCtSMessage(r); // <<<
                     this.InvokeAction(() => {
-                        AppendRecord(r);
+                        AppendRecordToList(r);
                         UpdateLabelsState();
                     });
                 }
@@ -129,27 +134,29 @@ namespace LanDataTransmitter.Frm {
             Task.Run(async () => {
                 Exception err = null;
                 try {
-                    var closedByClient = await Global.Client.Service.StartReceivingText(
+                    var closedByClient = await Global.Client.Service.StartPulling(
                         onReceived: r => {
+                            Global.Messages.AddStCMessage(r); // <<<
                             this.InvokeAction(() => {
-                                AppendRecord(r);
+                                AppendRecordToList(r);
                                 UpdateLabelsState();
                             });
                         }
                     );
-                    // No matter closed by client itself or by server passively, it is no need to request for disconnect, except when an error occured.
+                    // No matter closed by client itself or by server passively, it is no need to
+                    // request for disconnect, except when an error occurred.
                     if (closedByClient) {
                         return;
                     }
                 } catch (Exception ex) {
                     err = ex;
+                    // TODO now just to disconnect the client, later will consider retrying strategy
                     try {
-                        await Global.Client.Service.Disconnect(); // disconnect first
+                        await Global.Client.Service.Disconnect();
                     } catch (Exception) {
                         // ignore all exceptions
                     }
                 }
-
                 // <- here connected has been disconnected.
                 Global.State = ApplicationState.Stopped;
                 this.InvokeAction(() => {
@@ -179,14 +186,15 @@ namespace LanDataTransmitter.Frm {
                 try {
                     if (Global.Behavior == ApplicationBehavior.AsServer) {
                         await Global.Server.Service.Shutdown();
+                        Global.Server.ConnectedClients.Clear();
                     } else {
                         await Global.Client.Service.Disconnect();
                     }
                 } catch (Exception) {
                     // ignore all exceptions
                 } finally {
+                    Global.State = ApplicationState.Stopped;
                     this.InvokeAction(() => {
-                        Global.State = ApplicationState.Stopped;
                         btnStop.Enabled = true;
                         cboSendTo.Items.Clear();
                         UpdateButtonsState();
@@ -207,6 +215,7 @@ namespace LanDataTransmitter.Frm {
             await Task.Run(async () => {
                 try {
                     await Global.Server.Service.DisconnectAll();
+                    Global.Server.ConnectedClients.Clear();
                 } catch (Exception) {
                     // ignore all exceptions
                 } finally {
@@ -223,6 +232,9 @@ namespace LanDataTransmitter.Frm {
         private bool _restarting;
 
         private void btnRestart_Click(object sender, EventArgs e) {
+            if (Global.State != ApplicationState.Stopped) {
+                return;
+            }
             InitForm.Instance.Show();
             _restarting = true;
             Close();
@@ -232,49 +244,50 @@ namespace LanDataTransmitter.Frm {
             if (_restarting) {
                 return;
             }
-            switch (Global.State) {
-                case ApplicationState.Running: {
-                    e.Cancel = true;
-                    var stopped = await StopManually();
-                    if (stopped) {
-                        Close();
-                    }
-                    return;
+            if (Global.State == ApplicationState.Running) {
+                e.Cancel = true;
+                if (await StopManually()) {
+                    Close();
                 }
-                case ApplicationState.Stopped: {
-                    e.Cancel = true;
-                    var ok = this.ShowQuestion("关闭确认", "是否关闭 LanDataTransmitter？");
-                    if (ok) {
-                        e.Cancel = false;
-                    }
-                    return;
-                }
-                default: {
-                    return; // dummy
+            } else {
+                e.Cancel = true;
+                var ok = this.ShowQuestion("关闭确认", "是否关闭 LanDataTransmitter？");
+                if (ok) {
+                    e.Cancel = false;
                 }
             }
         }
 
         #endregion
 
-        #region AppendList and Send
+        #region Append list, Send
 
-        private void AppendRecord(MessageRecord r) {
-            var time = Utils.FromTimestamp(r.Timestamp).ToString("yyyy-MM-dd HH:mm:ss");
-            var text = r.Text;
+        private void AppendRecordToList(MessageRecord r) {
+            var obj = new MessageRecordListView.MessageRecordObject { Record = r };
+            var time = Utils.RenderTimeForShow(Utils.FromTimestamp(r.Timestamp));
             if (Global.Behavior == ApplicationBehavior.AsServer) {
-                if (r.ClientToServer) { // received
-                    lsvRecord.AppendItem($"from {r.ClientNameOrId} - {time}", text);
+                if (r.IsCtS) { // received
+                    obj.InfoLine = $"{r.ClientDisplayName} ({time})";
+                    obj.IsReceived = true;
                 } else { // sent
-                    lsvRecord.AppendItem($"to {r.ClientNameOrId} - {time}", text, true);
+                    obj.IsReceived = false;
+                    obj.InfoLine = $"{r.ClientDisplayName} ({time})";
                 }
             } else {
-                if (!r.ClientToServer) { // received
-                    lsvRecord.AppendItem($"from server - {time}", text);
+                if (r.IsStC) { // received
+                    obj.InfoLine = $"server ({time})";
+                    obj.IsReceived = true;
                 } else { // sent
-                    lsvRecord.AppendItem($"to server - {time}", text, true);
+                    obj.InfoLine = $"server ({time})";
+                    obj.IsReceived = false;
                 }
             }
+            lsvRecord.AppendItem(obj);
+        }
+
+        public void SelectMessageRecordInList(int index) {
+            lsvRecord.Focus();
+            lsvRecord.SetSingleSelected(index);
         }
 
         private void edtText_TextChanged(object sender, EventArgs e) {
@@ -285,13 +298,14 @@ namespace LanDataTransmitter.Frm {
             var text = edtText.Text.Trim();
             var now = DateTime.Now;
             if (Global.Behavior == ApplicationBehavior.AsServer) {
-                var (id, _) = Utils.ExtractIdAndName((string) cboSendTo.SelectedItem);
+                var (id, _) = ClientObject.ExtractIdAndName((string) cboSendTo.SelectedItem);
                 await Task.Run(async () => {
                     try {
                         var r = await Global.Server.Service.SendText(id, text, now);
+                        Global.Messages.AddStCMessage(r); // <<<
                         this.InvokeAction(() => {
                             edtText.Text = "";
-                            AppendRecord(r);
+                            AppendRecordToList(r);
                             UpdateLabelsState();
                         });
                     } catch (Exception ex) {
@@ -302,9 +316,10 @@ namespace LanDataTransmitter.Frm {
                 await Task.Run(async () => {
                     try {
                         var r = await Global.Client.Service.SendText(text, now);
+                        Global.Messages.AddCtSMessage(r); // <<<
                         this.InvokeAction(() => {
                             edtText.Text = "";
-                            AppendRecord(r);
+                            AppendRecordToList(r);
                             UpdateLabelsState();
                         });
                     } catch (Exception ex) {
@@ -315,7 +330,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private void btnSendFile_Click(object sender, EventArgs e) {
-            // TODO
+            this.ShowInfo("发送文件", "TODO"); // TODO
         }
 
         #endregion
@@ -326,7 +341,16 @@ namespace LanDataTransmitter.Frm {
             if (lsvRecord.SelectedItems.Count == 0) {
                 return;
             }
-            this.ShowInfo("文本详情", "TODO");
+            var item = lsvRecord.SelectedItems[0];
+            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
+                var index = lsvRecord.SelectedIndices[0];
+                var f = new MessageDetailForm(obj.Record, index);
+                f.Show(this);
+            }
+        }
+
+        private void lsvRecord_MouseDoubleClick(object sender, MouseEventArgs e) {
+            tsmTextDetail_Click(tsmTextDetail, EventArgs.Empty);
         }
 
         private void tsmCopyInfo_Click(object sender, EventArgs e) {
@@ -334,8 +358,8 @@ namespace LanDataTransmitter.Frm {
                 return;
             }
             var item = lsvRecord.SelectedItems[0];
-            if (item.Tag is CustomListView.CustomListViewObject obj) {
-                Clipboard.SetText(obj.Line1);
+            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
+                Clipboard.SetText(obj.InfoLine);
             }
         }
 
@@ -344,12 +368,11 @@ namespace LanDataTransmitter.Frm {
                 return;
             }
             var item = lsvRecord.SelectedItems[0];
-            if (item.Tag is CustomListView.CustomListViewObject obj) {
-                Clipboard.SetText(obj.Line2);
+            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
+                Clipboard.SetText(obj.Record.Text);
             }
         }
 
         #endregion
-
     }
 }

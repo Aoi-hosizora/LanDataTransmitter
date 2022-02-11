@@ -2,16 +2,19 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using LanDataTransmitter.Service;
 using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Frm.View {
 
-    public class CustomListView : ListView {
+    public class MessageRecordListView : ListView {
+
+        #region Appearance
 
         private readonly ColumnHeader _dummyHeader;
         private readonly ImageList _dummyImgList;
 
-        public CustomListView() {
+        public MessageRecordListView() {
             base.HeaderStyle = ColumnHeaderStyle.None;
             base.OwnerDraw = true;
 
@@ -53,6 +56,7 @@ namespace LanDataTransmitter.Frm.View {
             if (ClientSize.Width <= _oldWidth) { // getting narrow
                 NativeMethods.ShowScrollBar(Handle, (int) NativeMethods.SB_HORZ, false);
             }
+            Refresh();
             _oldWidth = ClientSize.Width;
         }
 
@@ -72,21 +76,6 @@ namespace LanDataTransmitter.Frm.View {
             }
         }
 
-        protected override void OnDrawItem(DrawListViewItemEventArgs e) {
-            if (e.Item.Tag is CustomListViewObject == false) {
-                e.DrawDefault = true;
-                return;
-            }
-            var obj = (CustomListViewObject) e.Item.Tag;
-            var f = TextFormatFlags.VerticalCenter | TextFormatFlags.WordEllipsis | TextFormatFlags.NoPrefix;
-            if (!obj.AlignRight) {
-                f |= TextFormatFlags.Left;
-            } else {
-                f |= TextFormatFlags.Right;
-            }
-            e.DrawText(f);
-        }
-
         protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e) {
             e.DrawDefault = false;
         }
@@ -95,18 +84,43 @@ namespace LanDataTransmitter.Frm.View {
             e.DrawDefault = false;
         }
 
-        private ContextMenuStrip _oldContextMenu;
+        #endregion
+
+        protected override void OnDrawItem(DrawListViewItemEventArgs e) {
+            if (!(e.Item.Tag is MessageRecordObject obj)) {
+                e.DrawDefault = true;
+                return;
+            }
+            var flag = TextFormatFlags.VerticalCenter | TextFormatFlags.WordEllipsis | TextFormatFlags.NoPrefix;
+            if (obj.IsReceived) {
+                flag |= TextFormatFlags.Left;
+            } else {
+                flag |= TextFormatFlags.Right;
+            }
+            e.DrawText(flag);
+        }
+
+        private void UpdateMenusState() {
+            if (ContextMenuStrip == null) {
+                return;
+            }
+            var empty = SelectedIndices.Count == 0;
+            foreach (ToolStripItem t in ContextMenuStrip.Items) {
+                if (t is ToolStripMenuItem item && (string) item.Tag == "depend") {
+                    item.Enabled = !empty;
+                }
+            }
+        }
 
         protected override void OnSelectedIndexChanged(EventArgs e) {
             base.OnSelectedIndexChanged(e);
-            var empty = SelectedIndices.Count == 0;
-            if (empty && ContextMenuStrip != null) {
-                _oldContextMenu = ContextMenuStrip;
-                _oldContextMenu.Enabled = false;
-                ContextMenuStrip = null;
-            } else if (!empty && ContextMenuStrip == null && _oldContextMenu != null) {
-                _oldContextMenu.Enabled = true;
-                ContextMenuStrip = _oldContextMenu;
+            UpdateMenusState();
+        }
+
+        protected override void OnVisibleChanged(EventArgs e) {
+            base.OnVisibleChanged(e);
+            if (Visible && !Disposing) {
+                UpdateMenusState();
             }
         }
 
@@ -118,24 +132,22 @@ namespace LanDataTransmitter.Frm.View {
             Items[index].EnsureVisible();
         }
 
-        public void AppendItem(string line1, string line2, bool right = false) {
-            var obj = new CustomListViewObject { Line1 = line1, Line2 = line2, AlignRight = right };
-            if (!right) {
-                line1 = "> " + line1;
-            } else {
-                line1 += " <";
-            }
-            line2 = line2.Replace("\r\n", "↴").Replace("\n", "↴");
+        private const string NewLineSymbol = "↴";
+
+        public void AppendItem(MessageRecordObject obj) {
+            var (line1, line2) = (obj.InfoLine, obj.Record.Text);
+            line1 = obj.IsReceived ? "→ " + line1 : line1 + " ←";
+            line2 = line2.Replace("\r\n", NewLineSymbol).Replace("\n", NewLineSymbol);
             var lvi = new ListViewItem { Text = line1 + Environment.NewLine + line2, Tag = obj };
             Items.Add(lvi);
             SetSingleSelected(Items.Count - 1);
         }
 
-        public class CustomListViewObject {
-            public string Line1 { get; set; }
-            public string Line2 { get; set; }
-            public bool AlignRight { get; set; }
+        public class MessageRecordObject {
+            public MessageRecord Record { get; set; }
+            public string InfoLine { get; set; }
+            public bool IsReceived { get; set; }
         }
 
-    }
+    } // class MessageRecordListView
 }

@@ -50,21 +50,17 @@ namespace LanDataTransmitter.Util {
             return DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
         }
 
+        public static string RenderTimeForShow(DateTime time) {
+            var now = DateTime.Now;
+            return time.ToString(time.DayOfYear == now.DayOfYear ? "HH:mm:ss" : "MM-dd HH:mm:ss");
+        }
+
         public static string GenerateGlobalId() {
             return Guid.NewGuid().ToString();
         }
 
         public static bool ValidIpv4Address(string address) {
             return IPAddress.TryParse(address, out _);
-        }
-
-        public static string ConcatIdAndName(string id, string name) {
-            return name == "" ? id : $"{id} ({name})";
-        }
-
-        public static Tuple<string, string> ExtractIdAndName(string s) {
-            var sp = s.Split(' ');
-            return new Tuple<string, string>(sp.Length == 0 ? "" : sp[0], sp.Length <= 1 ? "" : sp[1]);
         }
 
     } // Utils

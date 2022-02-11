@@ -28,8 +28,8 @@ namespace LanDataTransmitter.Frm {
             this.rdoServer = new System.Windows.Forms.RadioButton();
             this.rdoClient = new System.Windows.Forms.RadioButton();
             this.grpServer = new System.Windows.Forms.GroupBox();
-            this.cboServeInterface = new System.Windows.Forms.ComboBox();
             this.lblServeInterface = new System.Windows.Forms.Label();
+            this.cboServeInterface = new System.Windows.Forms.ComboBox();
             this.lblServeAddress = new System.Windows.Forms.Label();
             this.edtServeAddress = new System.Windows.Forms.TextBox();
             this.lblServePort = new System.Windows.Forms.Label();
@@ -40,8 +40,8 @@ namespace LanDataTransmitter.Frm {
             this.lblState = new System.Windows.Forms.Label();
             this.grpBehavior = new System.Windows.Forms.GroupBox();
             this.grpClient = new System.Windows.Forms.GroupBox();
-            this.edtClientName = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.lblClientName = new System.Windows.Forms.Label();
+            this.edtClientName = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.lblConnectAddress = new System.Windows.Forms.Label();
             this.edtTargetAddress = new System.Windows.Forms.TextBox();
             this.lblConnectPort = new System.Windows.Forms.Label();
@@ -58,7 +58,7 @@ namespace LanDataTransmitter.Frm {
             this.rdoServer.AutoSize = true;
             this.rdoServer.Checked = true;
             this.rdoServer.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.rdoServer.Location = new System.Drawing.Point(43, 25);
+            this.rdoServer.Location = new System.Drawing.Point(35, 25);
             this.rdoServer.Name = "rdoServer";
             this.rdoServer.Size = new System.Drawing.Size(92, 22);
             this.rdoServer.TabIndex = 2;
@@ -72,7 +72,7 @@ namespace LanDataTransmitter.Frm {
             this.rdoClient.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.rdoClient.AutoSize = true;
             this.rdoClient.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.rdoClient.Location = new System.Drawing.Point(155, 25);
+            this.rdoClient.Location = new System.Drawing.Point(153, 25);
             this.rdoClient.Name = "rdoClient";
             this.rdoClient.Size = new System.Drawing.Size(92, 22);
             this.rdoClient.TabIndex = 3;
@@ -97,6 +97,15 @@ namespace LanDataTransmitter.Frm {
             this.grpServer.TabStop = false;
             this.grpServer.Text = "服务器配置";
             // 
+            // lblServeInterface
+            // 
+            this.lblServeInterface.AutoSize = true;
+            this.lblServeInterface.Location = new System.Drawing.Point(6, 25);
+            this.lblServeInterface.Name = "lblServeInterface";
+            this.lblServeInterface.Size = new System.Drawing.Size(39, 17);
+            this.lblServeInterface.TabIndex = 5;
+            this.lblServeInterface.Text = "接口 :";
+            // 
             // cboServeInterface
             // 
             this.cboServeInterface.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -110,15 +119,6 @@ namespace LanDataTransmitter.Frm {
             this.cboServeInterface.Size = new System.Drawing.Size(223, 24);
             this.cboServeInterface.TabIndex = 6;
             this.cboServeInterface.SelectedIndexChanged += new System.EventHandler(this.cboInterface_SelectedIndexChanged);
-            // 
-            // lblServeInterface
-            // 
-            this.lblServeInterface.AutoSize = true;
-            this.lblServeInterface.Location = new System.Drawing.Point(6, 25);
-            this.lblServeInterface.Name = "lblServeInterface";
-            this.lblServeInterface.Size = new System.Drawing.Size(39, 17);
-            this.lblServeInterface.TabIndex = 5;
-            this.lblServeInterface.Text = "接口 :";
             // 
             // lblServeAddress
             // 
@@ -176,7 +176,7 @@ namespace LanDataTransmitter.Frm {
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnStart.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnStart.Location = new System.Drawing.Point(136, 315);
+            this.btnStart.Location = new System.Drawing.Point(136, 312);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 25);
             this.btnStart.TabIndex = 19;
@@ -189,7 +189,7 @@ namespace LanDataTransmitter.Frm {
             this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnExit.Location = new System.Drawing.Point(217, 315);
+            this.btnExit.Location = new System.Drawing.Point(217, 312);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 25);
             this.btnExit.TabIndex = 20;
@@ -201,7 +201,7 @@ namespace LanDataTransmitter.Frm {
             // 
             this.lblState.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblState.AutoSize = true;
-            this.lblState.Location = new System.Drawing.Point(65, 319);
+            this.lblState.Location = new System.Drawing.Point(65, 316);
             this.lblState.Name = "lblState";
             this.lblState.Size = new System.Drawing.Size(65, 17);
             this.lblState.TabIndex = 18;
@@ -238,14 +238,6 @@ namespace LanDataTransmitter.Frm {
             this.grpClient.TabStop = false;
             this.grpClient.Text = "客户端配置";
             // 
-            // edtClientName
-            // 
-            this.edtClientName.Location = new System.Drawing.Point(51, 22);
-            this.edtClientName.Name = "edtClientName";
-            this.edtClientName.PlaceholderText = "此处输入客户端名称 (可空)...";
-            this.edtClientName.Size = new System.Drawing.Size(223, 23);
-            this.edtClientName.TabIndex = 13;
-            // 
             // lblClientName
             // 
             this.lblClientName.AutoSize = true;
@@ -254,6 +246,16 @@ namespace LanDataTransmitter.Frm {
             this.lblClientName.Size = new System.Drawing.Size(39, 17);
             this.lblClientName.TabIndex = 12;
             this.lblClientName.Text = "名称 :";
+            // 
+            // edtClientName
+            // 
+            this.edtClientName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.edtClientName.Location = new System.Drawing.Point(51, 22);
+            this.edtClientName.Name = "edtClientName";
+            this.edtClientName.PlaceholderText = "此处输入客户端名称 (可空)...";
+            this.edtClientName.Size = new System.Drawing.Size(223, 23);
+            this.edtClientName.TabIndex = 13;
             // 
             // lblConnectAddress
             // 
@@ -312,7 +314,7 @@ namespace LanDataTransmitter.Frm {
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExit;
-            this.ClientSize = new System.Drawing.Size(304, 349);
+            this.ClientSize = new System.Drawing.Size(304, 344);
             this.Controls.Add(this.grpBehavior);
             this.Controls.Add(this.grpServer);
             this.Controls.Add(this.grpClient);

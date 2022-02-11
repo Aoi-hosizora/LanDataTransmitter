@@ -35,16 +35,18 @@ namespace LanDataTransmitter.Frm {
             var interfaces = Utils.GetNetworkInterfaces();
             cboServeInterface.Items.AddRange(interfaces.ToArray<object>());
             cboServeInterface.SelectedIndex = 0;
+
+            Global.State = ApplicationState.Preparing;
         }
 
         private void btnExit_Click(object sender, EventArgs e) {
             Close();
         }
 
-        private bool IsServerBehavior() => rdoServer.Checked;
+        private bool IsServerBehavior => rdoServer.Checked;
 
         private void rdoBehavior_CheckedChanged(object sender, EventArgs e) {
-            var isServer = IsServerBehavior();
+            var isServer = IsServerBehavior;
             grpServer.Visible = isServer;
             grpClient.Visible = !isServer;
         }
@@ -58,7 +60,7 @@ namespace LanDataTransmitter.Frm {
             // !!!!!!
             await Task.Run(async () => {
                 try {
-                    if (IsServerBehavior()) {
+                    if (IsServerBehavior) {
                         var (addr, port) = (edtServeAddress.Text.Trim(), (int) numServePort.Value);
                         var service = new GrpcServerService(addr, port);
                         await service.Serve();
@@ -80,7 +82,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private void ProcessTrying() {
-            lblState.Text = IsServerBehavior() ? "尝试监听..." : "尝试连接...";
+            lblState.Text = IsServerBehavior ? "尝试监听..." : "尝试连接...";
             lblState.Visible = true;
             btnStart.Enabled = false;
             grpBehavior.Enabled = false;
@@ -89,7 +91,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private void ProcessFailed(string reason) {
-            if (IsServerBehavior()) {
+            if (IsServerBehavior) {
                 this.ShowError("监听失败", $"无法监听指定的地址和端口。\n原因：{reason}");
             } else {
                 this.ShowError("连接失败", $"无法连接到指定的地址和端口。\n原因：{reason}");

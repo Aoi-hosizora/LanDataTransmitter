@@ -135,7 +135,13 @@
     <Compile Include="Frm\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Frm\View\CustomListView.cs">
+    <Compile Include="Frm\MessageDetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\MessageDetailForm.Designer.cs">
+      <DependentUpon>MessageDetailForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm\View\MessageRecordListView.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Frm\View\MenuNativeRenderer.cs" />
@@ -155,6 +161,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Frm\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm\MessageDetailForm.resx">
+      <DependentUpon>MessageDetailForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -179,6 +188,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets" Condition="Exists('packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets')" />
