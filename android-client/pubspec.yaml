@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.1
+  protobuf: ^1.1.4
+  grpc: ^2.9.0
+  async: ^2.2.0
 
 dev_dependencies:
   flutter_test:
