@@ -1,6 +1,6 @@
 # LanDataTransmitter
 
-+ Windows and Android clients to transmit data (plain texts or files) between hosts in the same LAN.
++ Windows (Winforms) and Android (Flutter) clients to transmit data, such as plain text and file, between hosts in the same LAN.
 
 ### Reference
 
