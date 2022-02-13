@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lan_data_transmitter/page/main.dart';
 import 'package:lan_data_transmitter/service/global.dart';
 import 'package:lan_data_transmitter/service/grpc_client_service.dart';
 import 'package:lan_data_transmitter/service/grpc_server_service.dart';
+import 'package:lan_data_transmitter/util/bichannel.dart';
 import 'package:lan_data_transmitter/util/extensions.dart';
 import 'package:regexed_validator/regexed_validator.dart';
 
@@ -76,6 +80,7 @@ class _InitPageState extends State<InitPage> {
         var addr = _serveAddrController.text;
         var port = int.tryParse(_servePortController.text)!;
         var service = GrpcServerService(addr, port);
+        await Future.delayed(Duration(seconds: 1));
         await service.serve();
         Global.initializeServer(service); // => ApplicationState.Running
       } else {
@@ -83,6 +88,7 @@ class _InitPageState extends State<InitPage> {
         var port = int.tryParse(_targetPortController.text)!;
         var name = _clientNameController.text;
         var service = GrpcClientService(addr, port);
+        await Future.delayed(Duration(seconds: 1));
         var id = await service.connect(name);
         Global.initializeClient(service, id, name); // => ApplicationState.Running
       }
@@ -165,10 +171,11 @@ class _InitPageState extends State<InitPage> {
                         enabled: !_trying,
                         readOnly: true,
                         decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 8.5),
+                          contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '监听地址 (总是监听所有接口地址)',
                           icon: Icon(Icons.language),
                         ),
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
                       SizedBox(height: 4),
                       TextFormField(
@@ -179,9 +186,9 @@ class _InitPageState extends State<InitPage> {
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '监听端口',
-                          hintText: '此处输入监听端口...',
                           icon: Icon(Icons.grid_3x3),
                         ),
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
                     ],
                   ),
@@ -203,9 +210,9 @@ class _InitPageState extends State<InitPage> {
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '目的地址',
-                          hintText: '此处输入服务器的监听地址...',
                           icon: Icon(Icons.language),
                         ),
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
                       SizedBox(height: 4),
                       TextFormField(
@@ -216,9 +223,9 @@ class _InitPageState extends State<InitPage> {
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '目的端口',
-                          hintText: '此处输入服务器的监听端口...',
                           icon: Icon(Icons.grid_3x3),
                         ),
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
                       SizedBox(height: 4),
                       TextFormField(
@@ -227,9 +234,9 @@ class _InitPageState extends State<InitPage> {
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '客户端名称 (可空)',
-                          hintText: '此处输入客户端名称...',
                           icon: Icon(Icons.contact_page_outlined),
                         ),
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
                     ],
                   ),
@@ -261,6 +268,41 @@ class _InitPageState extends State<InitPage> {
                       ],
                     ),
             ),
+
+            /// x
+            OutlinedButton(
+              onPressed: () async {
+                var channel = BlockingChannel<int>();
+                var s = '';
+
+                unawaited(Future.microtask(() async {
+                  while (true) {
+                    final int? data;
+                    try {
+                      data = await channel.receive();
+                    } on ChannelClosedException catch (ex) {
+                      Fluttertoast.showToast(msg: 'receive error: ${ex.message}\nData: $s');
+                      break;
+                    }
+                    s += '_$data ';
+                  }
+                }));
+
+                for (int i = 0; i < 100; i++) {
+                  await channel.send(i);
+                  s += '$i ';
+                }
+                channel.close();
+                // try {
+                //   await channel.send(null);
+                // } on ChannelClosedException catch (ex) {
+                //   Fluttertoast.showToast(msg: 'send error: ${ex.message}');
+                // }
+              },
+              child: Text('xxx'),
+            ),
+
+            /// x
           ],
         ),
       ),

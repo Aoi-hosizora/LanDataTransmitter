@@ -16,8 +16,28 @@ class GrpcServerService {
   Future serve() async {
     _serverImpl = TransmitterImpl();
     _server = Server([_serverImpl!]);
-    await _server!.serve(address: address, port: port);
+    await _server!.serve(address: address, port: port); // 10.0.3.2
   }
+
+  Future shutdown() async {
+    await disconnectAll();
+    await _server?.shutdown();
+  }
+
+  Future disconnectAll() async {
+    for (var id in Global.server!.connectedClients.keys) {}
+  }
+
+  // Future sendText(String clientId, String text, DateTime time) {
+  //   var obj = Global.server!.connectedClients[clientId];
+  //   if (obj == null) {
+  //     throw Exception('服务器暂未连接到客户端 $clientId');
+  //   }
+  //   var messageId = util.generateGlobalId();
+  //   var timestamp = util.toTimestamp(time);
+  //   // chan
+  //
+  // }
 }
 
 class TransmitterImpl extends TransmitterServiceBase {
@@ -53,7 +73,13 @@ class TransmitterImpl extends TransmitterServiceBase {
 
   @override
   Future<PushTextReply> pushText(ServiceCall call, PushTextRequest request) {
-    throw UnimplementedError();
+    var obj = Global.server!.connectedClients[request.clientId];
+    if (obj == null) {
+      return Future.value(PushTextReply(accepted: false)); // not connect yet
+    }
+    var messageId = util.generateGlobalId();
+    // ...
+    return Future.value(PushTextReply(accepted: true, messageId: messageId));
   }
 
   @override

@@ -34,17 +34,17 @@ namespace LanDataTransmitter.Frm {
             this.btnSendFile = new System.Windows.Forms.Button();
             this.btnSendText = new System.Windows.Forms.Button();
             this.splContent = new System.Windows.Forms.SplitContainer();
+            this.lsvRecord = new LanDataTransmitter.Frm.View.MessageRecordListView();
             this.cmsListView = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmTextDetail = new System.Windows.Forms.ToolStripMenuItem();
             this.tssFirst = new System.Windows.Forms.ToolStripSeparator();
             this.tsmCopyInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmCopyText = new System.Windows.Forms.ToolStripMenuItem();
+            this.edtText = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.cboSendTo = new System.Windows.Forms.ComboBox();
             this.lblSendTo = new System.Windows.Forms.Label();
             this.tipMain = new System.Windows.Forms.ToolTip(this.components);
             this.lblRecord = new System.Windows.Forms.Label();
-            this.lsvRecord = new LanDataTransmitter.Frm.View.MessageRecordListView();
-            this.edtText = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.grpState.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splContent)).BeginInit();
             this.splContent.Panel1.SuspendLayout();
@@ -170,6 +170,24 @@ namespace LanDataTransmitter.Frm {
             this.splContent.SplitterDistance = 101;
             this.splContent.TabIndex = 7;
             // 
+            // lsvRecord
+            // 
+            this.lsvRecord.ContextMenuStrip = this.cmsListView;
+            this.lsvRecord.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvRecord.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.lsvRecord.FullRowSelect = true;
+            this.lsvRecord.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lsvRecord.HideSelection = false;
+            this.lsvRecord.Location = new System.Drawing.Point(0, 0);
+            this.lsvRecord.MultiSelect = false;
+            this.lsvRecord.Name = "lsvRecord";
+            this.lsvRecord.OwnerDraw = true;
+            this.lsvRecord.Size = new System.Drawing.Size(360, 101);
+            this.lsvRecord.TabIndex = 8;
+            this.lsvRecord.UseCompatibleStateImageBehavior = false;
+            this.lsvRecord.View = System.Windows.Forms.View.Details;
+            this.lsvRecord.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lsvRecord_MouseDoubleClick);
+            // 
             // cmsListView
             // 
             this.cmsListView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -183,7 +201,7 @@ namespace LanDataTransmitter.Frm {
             // tsmTextDetail
             // 
             this.tsmTextDetail.Name = "tsmTextDetail";
-            this.tsmTextDetail.Size = new System.Drawing.Size(180, 22);
+            this.tsmTextDetail.Size = new System.Drawing.Size(177, 22);
             this.tsmTextDetail.Tag = "depend";
             this.tsmTextDetail.Text = "消息详情(&D)...";
             this.tsmTextDetail.Click += new System.EventHandler(this.tsmTextDetail_Click);
@@ -191,13 +209,13 @@ namespace LanDataTransmitter.Frm {
             // tssFirst
             // 
             this.tssFirst.Name = "tssFirst";
-            this.tssFirst.Size = new System.Drawing.Size(177, 6);
+            this.tssFirst.Size = new System.Drawing.Size(174, 6);
             // 
             // tsmCopyInfo
             // 
             this.tsmCopyInfo.Name = "tsmCopyInfo";
             this.tsmCopyInfo.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.tsmCopyInfo.Size = new System.Drawing.Size(180, 22);
+            this.tsmCopyInfo.Size = new System.Drawing.Size(177, 22);
             this.tsmCopyInfo.Tag = "depend";
             this.tsmCopyInfo.Text = "复制信息(&I)";
             this.tsmCopyInfo.Click += new System.EventHandler(this.tsmCopyInfo_Click);
@@ -206,10 +224,22 @@ namespace LanDataTransmitter.Frm {
             // 
             this.tsmCopyText.Name = "tsmCopyText";
             this.tsmCopyText.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.tsmCopyText.Size = new System.Drawing.Size(180, 22);
+            this.tsmCopyText.Size = new System.Drawing.Size(177, 22);
             this.tsmCopyText.Tag = "depend";
             this.tsmCopyText.Text = "复制文本(&C)";
             this.tsmCopyText.Click += new System.EventHandler(this.tsmCopyText_Click);
+            // 
+            // edtText
+            // 
+            this.edtText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.edtText.Location = new System.Drawing.Point(0, 0);
+            this.edtText.Multiline = true;
+            this.edtText.Name = "edtText";
+            this.edtText.PlaceholderText = "此处输入需要发送的内容...";
+            this.edtText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.edtText.Size = new System.Drawing.Size(360, 45);
+            this.edtText.TabIndex = 9;
+            this.edtText.TextChanged += new System.EventHandler(this.edtText_TextChanged);
             // 
             // cboSendTo
             // 
@@ -241,36 +271,6 @@ namespace LanDataTransmitter.Frm {
             this.lblRecord.Size = new System.Drawing.Size(286, 17);
             this.lblRecord.TabIndex = 6;
             this.lblRecord.Text = "消息收发记录：(共收到 0 条消息，已发送 0 条消息)";
-            // 
-            // lsvRecord
-            // 
-            this.lsvRecord.ContextMenuStrip = this.cmsListView;
-            this.lsvRecord.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lsvRecord.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
-            this.lsvRecord.FullRowSelect = true;
-            this.lsvRecord.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lsvRecord.HideSelection = false;
-            this.lsvRecord.Location = new System.Drawing.Point(0, 0);
-            this.lsvRecord.MultiSelect = false;
-            this.lsvRecord.Name = "lsvRecord";
-            this.lsvRecord.OwnerDraw = true;
-            this.lsvRecord.Size = new System.Drawing.Size(360, 101);
-            this.lsvRecord.TabIndex = 8;
-            this.lsvRecord.UseCompatibleStateImageBehavior = false;
-            this.lsvRecord.View = System.Windows.Forms.View.Details;
-            this.lsvRecord.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lsvRecord_MouseDoubleClick);
-            // 
-            // edtText
-            // 
-            this.edtText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.edtText.Location = new System.Drawing.Point(0, 0);
-            this.edtText.Multiline = true;
-            this.edtText.Name = "edtText";
-            this.edtText.PlaceholderText = "此处输入需要发送的内容...";
-            this.edtText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.edtText.Size = new System.Drawing.Size(360, 45);
-            this.edtText.TabIndex = 9;
-            this.edtText.TextChanged += new System.EventHandler(this.edtText_TextChanged);
             // 
             // MainForm
             // 

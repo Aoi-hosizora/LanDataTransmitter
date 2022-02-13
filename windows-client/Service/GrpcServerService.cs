@@ -88,7 +88,7 @@ namespace LanDataTransmitter.Service {
         }
 
         public void SetupTransmitter(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
-            _serverImpl.Setup(
+            _serverImpl.SetupCallbacks(
                 onConnected: onConnected, // 回调：服务器连接了新客户端
                 onDisconnected: onDisconnected, // 回调：服务器取消连接客户端
                 onReceived: onReceived // 回调：服务器收到了来自客户端的消息
@@ -103,7 +103,7 @@ namespace LanDataTransmitter.Service {
         private ConnectStateChangedCallback _onDisconnected;
         private MessageReceivedCallback _onReceived;
 
-        public void Setup(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
+        public void SetupCallbacks(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
             _onConnected = onConnected;
             _onDisconnected = onDisconnected;
             _onReceived = onReceived;
@@ -115,7 +115,7 @@ namespace LanDataTransmitter.Service {
             if (name.Length > 0 && Global.Server.ConnectedClients.Any(kv => kv.Value.Name == name)) {
                 return Task.FromResult(new ConnectReply { Accepted = false }); // conflict
             }
-            var chan = new BiChannel<PullReply, Exception>(1);
+            var chan = new BiChannel<PullReply, Exception>();
             var obj = new ClientObject { Id = clientId, Name = name, ConnectedTime = DateTime.Now, Pulling = false, PullChannel = chan };
             _onConnected?.Invoke(obj);
             return Task.FromResult(new ConnectReply { Accepted = true, ClientId = clientId });
