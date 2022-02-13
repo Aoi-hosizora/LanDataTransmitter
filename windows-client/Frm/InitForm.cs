@@ -64,12 +64,12 @@ namespace LanDataTransmitter.Frm {
                         var (addr, port) = (edtServeAddress.Text.Trim(), (int) numServePort.Value);
                         var service = new GrpcServerService(addr, port);
                         await service.Serve();
-                        this.InvokeAction(() => Global.InitializeServer(service)); // => ApplicationState.Running
+                        Global.InitializeServer(service); // => ApplicationState.Running
                     } else {
                         var (addr, port, name) = (edtTargetAddress.Text.Trim(), (int) numTargetPort.Value, edtClientName.Text.Trim());
                         var service = new GrpcClientService(addr, port);
                         var id = await service.Connect(name);
-                        this.InvokeAction(() => Global.InitializeClient(id, name, service)); // => ApplicationState.Running
+                        Global.InitializeClient(id, name, service); // => ApplicationState.Running
                     }
                     this.InvokeAction(() => {
                         MainForm.Instance.Show();

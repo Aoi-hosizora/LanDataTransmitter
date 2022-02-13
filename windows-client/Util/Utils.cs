@@ -42,6 +42,14 @@ namespace LanDataTransmitter.Util {
             return address;
         }
 
+        public static string GenerateGlobalId() {
+            return Guid.NewGuid().ToString();
+        }
+
+        public static bool ValidIpv4Address(string address) {
+            return IPAddress.TryParse(address, out _);
+        }
+
         public static long ToTimestamp(DateTime time) {
             return new DateTimeOffset(time).ToUnixTimeSeconds();
         }
@@ -53,14 +61,6 @@ namespace LanDataTransmitter.Util {
         public static string RenderTimeForShow(DateTime time) {
             var now = DateTime.Now;
             return time.ToString(time.DayOfYear == now.DayOfYear ? "HH:mm:ss" : "MM-dd HH:mm:ss");
-        }
-
-        public static string GenerateGlobalId() {
-            return Guid.NewGuid().ToString();
-        }
-
-        public static bool ValidIpv4Address(string address) {
-            return IPAddress.TryParse(address, out _);
         }
 
     } // Utils
