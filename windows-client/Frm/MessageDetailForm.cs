@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using LanDataTransmitter.Model;
 using LanDataTransmitter.Service;
 using LanDataTransmitter.Util;
 

@@ -1,14 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lan_data_transmitter/page/main.dart';
 import 'package:lan_data_transmitter/service/global.dart';
 import 'package:lan_data_transmitter/service/grpc_client_service.dart';
 import 'package:lan_data_transmitter/service/grpc_server_service.dart';
-import 'package:lan_data_transmitter/util/bichannel.dart';
 import 'package:lan_data_transmitter/util/extensions.dart';
-import 'package:regexed_validator/regexed_validator.dart';
+import 'package:lan_data_transmitter/util/util.dart' as util;
 
 class InitPage extends StatefulWidget {
   const InitPage({Key? key}) : super(key: key);
@@ -22,9 +18,9 @@ class _InitPageState extends State<InitPage> {
   final _clientFormKey = GlobalKey<FormState>();
   final _serveAddrController = TextEditingController();
   final _servePortController = TextEditingController();
-  final _clientNameController = TextEditingController();
   final _targetAddrController = TextEditingController();
   final _targetPortController = TextEditingController();
+  final _clientNameController = TextEditingController();
   var _behavior = ApplicationBehavior.server;
   var _trying = false;
 
@@ -41,22 +37,17 @@ class _InitPageState extends State<InitPage> {
   void dispose() {
     _serveAddrController.dispose();
     _servePortController.dispose();
-    _clientNameController.dispose();
     _targetAddrController.dispose();
     _targetPortController.dispose();
+    _clientNameController.dispose();
     super.dispose();
-  }
-
-  void _setRadioBehavior(ApplicationBehavior b) {
-    _behavior = b;
-    if (mounted) setState(() {});
   }
 
   String? _ipValidator(String? r) {
     if (r == null || r.isEmpty) {
       return '网络地址不允许置空';
     }
-    return validator.ip(r) ? null : '网络地址不合法';
+    return util.validIpv4Address(r) ? null : '网络地址不合法';
   }
 
   String? _portValidator(String? r) {
@@ -75,20 +66,16 @@ class _InitPageState extends State<InitPage> {
     if (_behavior == ApplicationBehavior.client && !_clientFormKey.currentState!.validate()) return;
     _trying = true;
     if (mounted) setState(() {});
+
     try {
       if (_behavior == ApplicationBehavior.server) {
-        var addr = _serveAddrController.text;
-        var port = int.tryParse(_servePortController.text)!;
+        var addr = _serveAddrController.text, port = int.tryParse(_servePortController.text)!;
         var service = GrpcServerService(addr, port);
-        await Future.delayed(Duration(seconds: 1));
         await service.serve();
         Global.initializeServer(service); // => ApplicationState.Running
       } else {
-        var addr = _targetAddrController.text;
-        var port = int.tryParse(_targetPortController.text)!;
-        var name = _clientNameController.text;
+        var addr = _targetAddrController.text, port = int.tryParse(_targetPortController.text)!, name = _clientNameController.text;
         var service = GrpcClientService(addr, port);
-        await Future.delayed(Duration(seconds: 1));
         var id = await service.connect(name);
         Global.initializeClient(service, id, name); // => ApplicationState.Running
       }
@@ -102,9 +89,9 @@ class _InitPageState extends State<InitPage> {
       _trying = false;
       if (mounted) setState(() {});
       if (_behavior == ApplicationBehavior.server) {
-        showInfo(title: '监听失败', message: '无法监听指定的地址和端口。\n原因：$ex');
+        showInfo(title: '监听失败', message: '无法监听指定的地址和端口。\n原因：${ex.message()}');
       } else {
-        showInfo(title: '连接失败', message: '无法连接到指定的地址和端口。\n原因：$ex');
+        showInfo(title: '连接失败', message: '无法连接到指定的地址和端口。\n原因：${ex.message()}');
       }
     }
   }
@@ -133,13 +120,13 @@ class _InitPageState extends State<InitPage> {
                       Radio<ApplicationBehavior>(
                         value: ApplicationBehavior.server,
                         groupValue: _behavior,
-                        onChanged: (_) => _setRadioBehavior(ApplicationBehavior.server),
+                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.server),
                       ),
                       Text('作为服务器'),
                       SizedBox(width: 16),
                     ],
                   ),
-                  onTap: () => _setRadioBehavior(ApplicationBehavior.server),
+                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.server),
                 ),
                 InkWell(
                   child: Row(
@@ -147,13 +134,13 @@ class _InitPageState extends State<InitPage> {
                       Radio<ApplicationBehavior>(
                         value: ApplicationBehavior.client,
                         groupValue: _behavior,
-                        onChanged: (_) => _setRadioBehavior(ApplicationBehavior.client),
+                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.client),
                       ),
                       Text('作为客户端'),
                       SizedBox(width: 16),
                     ],
                   ),
-                  onTap: () => _setRadioBehavior(ApplicationBehavior.client),
+                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.client),
                 ),
               ],
             ),
@@ -172,8 +159,8 @@ class _InitPageState extends State<InitPage> {
                         readOnly: true,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '监听地址 (总是监听所有接口地址)',
-                          icon: Icon(Icons.language),
+                          labelText: '监听地址 (总是监听所有网络接口的地址)',
+                          icon: Icon(Icons.public),
                         ),
                         style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
@@ -210,7 +197,7 @@ class _InitPageState extends State<InitPage> {
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
                           labelText: '目的地址',
-                          icon: Icon(Icons.language),
+                          icon: Icon(Icons.public),
                         ),
                         style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                       ),
@@ -268,41 +255,6 @@ class _InitPageState extends State<InitPage> {
                       ],
                     ),
             ),
-
-            /// x
-            OutlinedButton(
-              onPressed: () async {
-                var channel = BlockingChannel<int>();
-                var s = '';
-
-                unawaited(Future.microtask(() async {
-                  while (true) {
-                    final int? data;
-                    try {
-                      data = await channel.receive();
-                    } on ChannelClosedException catch (ex) {
-                      Fluttertoast.showToast(msg: 'receive error: ${ex.message}\nData: $s');
-                      break;
-                    }
-                    s += '_$data ';
-                  }
-                }));
-
-                for (int i = 0; i < 100; i++) {
-                  await channel.send(i);
-                  s += '$i ';
-                }
-                channel.close();
-                // try {
-                //   await channel.send(null);
-                // } on ChannelClosedException catch (ex) {
-                //   Fluttertoast.showToast(msg: 'send error: ${ex.message}');
-                // }
-              },
-              child: Text('xxx'),
-            ),
-
-            /// x
           ],
         ),
       ),

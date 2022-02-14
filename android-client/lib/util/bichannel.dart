@@ -12,11 +12,11 @@ class BiChannel<TForward, TBackward> {
       : _forwardChannel = BlockingChannel<TForward>(),
         _backwardChannel = BlockingChannel<TBackward>();
 
-  Future sendForward(TForward? data) async {
+  Future<void> sendForward(TForward? data) async {
     await _forwardChannel.send(data);
   }
 
-  Future sendBackward(TBackward? data) async {
+  Future<void> sendBackward(TBackward? data) async {
     await _backwardChannel.send(data);
   }
 
@@ -28,6 +28,14 @@ class BiChannel<TForward, TBackward> {
   Future<TForward?> receiveBackward() async {
     var data = await _forwardChannel.receive();
     return data;
+  }
+
+  void complete([String? message]) {
+    message ??= 'channel is completed';
+    try {
+      _forwardChannel.complete(message);
+      _backwardChannel.complete(message);
+    } catch (_) {}
   }
 }
 
@@ -42,11 +50,11 @@ class BlockingChannel<T> {
   final _recvQueue = Queue<Completer<Tuple<T?, bool>>>();
 
   var _isClosed = false;
-  var _closedMessage = 'Channel is closed';
+  var _closedMessage = 'channel is completed';
 
   bool get isClosed => _isClosed;
 
-  Future send(T? value) {
+  Future<void> send(T? value) {
     if (_isClosed) {
       throw ChannelClosedException(_closedMessage);
     }
@@ -102,7 +110,7 @@ class BlockingChannel<T> {
     return pair.item1;
   }
 
-  void close([String? message]) {
+  void complete([String? message]) {
     _isClosed = true;
     if (message != null) {
       _closedMessage = message;

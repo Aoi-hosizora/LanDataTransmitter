@@ -1,8 +1,8 @@
 using System;
-using ThreadChannels = System.Threading.Channels;
 using System.Threading.Tasks;
 using Grpc.Core;
 using GrpcChannel = Grpc.Core.Channel;
+using LanDataTransmitter.Model;
 using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Service {
@@ -74,7 +74,7 @@ namespace LanDataTransmitter.Service {
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
-            var record = MessageRecord.Create(Global.Client.Id, Global.Client.Name, reply.MessageId, timestamp, text); // C -> S
+            var record = new MessageRecord(Global.Client.Id, Global.Client.Name, reply.MessageId, timestamp, text); // C -> S
             return record; // 通过返回值通知调用方：消息成功发送至服务器
         }
 
@@ -82,7 +82,8 @@ namespace LanDataTransmitter.Service {
             var (channel, client) = CreateClient();
             IAsyncStreamReader<PullReply> stream;
             try {
-                stream = client.Pull(new PullRequest { ClientId = Global.Client.Id }).ResponseStream;
+                var request = new PullRequest { ClientId = Global.Client.Id };
+                stream = client.Pull(request).ResponseStream;
             } catch (Exception ex) {
                 throw new Exception("无法连接到服务器：" + ex.Message);
             }
@@ -98,7 +99,7 @@ namespace LanDataTransmitter.Service {
                         return false; // 被动断开
                     case PulledType.Text:
                         var pulled = reply.Text;
-                        var record = MessageRecord.Create(Global.Client.Id, Global.Client.Name, pulled.MessageId, pulled.Timestamp, pulled.Text); // S -> C
+                        var record = new MessageRecord(Global.Client.Id, Global.Client.Name, pulled.MessageId, pulled.Timestamp, pulled.Text); // C <- S
                         onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自服务器的消息
                         break;
                 }

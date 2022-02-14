@@ -1,3 +1,5 @@
+import 'package:fixnum/fixnum.dart';
+import 'package:regexed_validator/regexed_validator.dart';
 import 'package:uuid/uuid.dart';
 
 String generateGlobalId() {
@@ -5,12 +7,18 @@ String generateGlobalId() {
   return uuid.v4();
 }
 
-int toTimestamp(DateTime time) {
-  return time.millisecondsSinceEpoch ~/ 1000;
+bool validIpv4Address(String address) {
+  return validator.ip(address);
 }
 
-DateTime fromTimestamp(int timestamp) {
-  return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+Int64 toTimestamp(DateTime time) {
+  int timestamp = time.millisecondsSinceEpoch ~/ 1000;
+  return Int64.fromInts(timestamp >> 32, timestamp & 0xffffffff);
+}
+
+DateTime fromTimestamp(Int64 timestamp) {
+  var ms = timestamp.toInt() * 1000;
+  return DateTime.fromMillisecondsSinceEpoch(ms);
 }
 
 class Tuple<T1, T2> {

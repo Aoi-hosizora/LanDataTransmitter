@@ -1,16 +1,17 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using ThreadChannels = System.Threading.Channels;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Grpc.Core;
 using GrpcChannel = Grpc.Core.Channel;
+using LanDataTransmitter.Model;
 using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Service {
 
-    public delegate void MessageReceivedCallback(MessageRecord request);
     public delegate void ConnectStateChangedCallback(ClientObject client);
+    public delegate void MessageReceivedCallback(MessageRecord request);
 
     public class GrpcServerService {
 
@@ -39,7 +40,7 @@ namespace LanDataTransmitter.Service {
             } catch (IOException) {
                 _serverImpl = null;
                 _server = null;
-                throw new Exception("所监听的端口被占用");
+                throw new Exception("指定的监听端口被占用");
             }
         }
 
@@ -78,12 +79,12 @@ namespace LanDataTransmitter.Service {
                 if (ex != null) {
                     throw ex;
                 }
-            } catch (ThreadChannels.ChannelClosedException) {
+            } catch (ChannelClosedException) {
                 // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
             } catch (Exception ex) {
                 throw new Exception("无法连接到服务器：" + ex.Message);
             }
-            var record = MessageRecord.Create(clientId, obj.Name, messageId, timestamp, text); // S -> C
+            var record = new MessageRecord(clientId, obj.Name, messageId, timestamp, text); // C <- S
             return record; // 通过返回值通知调用方：消息成功发送至客户端
         }
 
@@ -138,7 +139,7 @@ namespace LanDataTransmitter.Service {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // not connect yet
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = MessageRecord.Create(obj.Id, obj.Name, messageId, request.Timestamp, request.Text); // C -> S
+            var record = new MessageRecord(obj.Id, obj.Name, messageId, request.Timestamp, request.Text); // C -> S
             _onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自客户端的消息
             return Task.FromResult(new PushTextReply { Accepted = true, MessageId = messageId });
         }
@@ -159,13 +160,13 @@ namespace LanDataTransmitter.Service {
                     var reply = await chan.ReceiveForward(); // from GrpcServerService.SendText
                     await responseStream.WriteAsync(reply);
                     await chan.SendBackward(null /* ex */); // goto GrpcServerService.SendText
-                } catch (ThreadChannels.ChannelClosedException) {
+                } catch (ChannelClosedException) {
                     // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
                     return; // close stream also
                 } catch (Exception ex) {
                     try {
                         await chan.SendBackward(ex);
-                    } catch (ThreadChannels.ChannelClosedException) {
+                    } catch (ChannelClosedException) {
                         return;
                     }
                 }

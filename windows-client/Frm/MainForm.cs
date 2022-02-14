@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using LanDataTransmitter.Frm.View;
+using LanDataTransmitter.Model;
 using LanDataTransmitter.Service;
 using LanDataTransmitter.Util;
 

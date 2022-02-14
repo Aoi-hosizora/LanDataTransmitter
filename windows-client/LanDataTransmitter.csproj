@@ -1,7 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props" Condition="Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -80,6 +78,19 @@
   <PropertyGroup>
     <StartupObject>LanDataTransmitter.Program</StartupObject>
   </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets" Condition="Exists('packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets')" />
+  <Import Project="packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props" Condition="Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props')" />
+  <Import Project="packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets" Condition="Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets'))" />
+    <Error Condition="!Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props'))" />
+    <Error Condition="!Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets'))" />
+  </Target>
   <ItemGroup>
     <Reference Include="Google.Protobuf, Version=3.19.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>packages\Google.Protobuf.3.19.1\lib\net45\Google.Protobuf.dll</HintPath>
@@ -122,6 +133,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
+  <!-- ItemGroup: Compile & Resource !!! -->
   <ItemGroup>
     <Compile Include="Frm\InitForm.cs">
       <SubType>Form</SubType>
@@ -148,6 +160,7 @@
     <Compile Include="Frm\View\PlaceholderTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\Objects.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\Global.cs" />
@@ -186,25 +199,14 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
+  <!-- ItemGroup: Protobuf & None !!! -->
   <ItemGroup>
+    <Protobuf Include="..\protos\*.proto" OutputDir=".\Model" />
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="Model\.gitignore" />
+    <None Include="Model\Transmitter.cs" />
+    <None Include="Model\TransmitterGrpc.cs" />
     <None Include="..\.gitignore" />
     <None Include="..\README.md" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets" Condition="Exists('packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Core.2.42.0\build\net45\Grpc.Core.targets'))" />
-    <Error Condition="!Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Tools.2.42.0\build\Grpc.Tools.props'))" />
-    <Error Condition="!Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets'))" />
-  </Target>
-  <Import Project="packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets" Condition="Exists('packages\Grpc.Tools.2.42.0\build\Grpc.Tools.targets')" />
-  <ItemGroup>
-    <Protobuf Include="..\protos\*.proto" />
   </ItemGroup>
 </Project>

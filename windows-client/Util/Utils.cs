@@ -50,12 +50,12 @@ namespace LanDataTransmitter.Util {
             return IPAddress.TryParse(address, out _);
         }
 
-        public static long ToTimestamp(DateTime time) {
-            return new DateTimeOffset(time).ToUnixTimeSeconds();
+        public static ulong ToTimestamp(DateTime time) {
+            return (ulong) new DateTimeOffset(time).ToUnixTimeSeconds();
         }
 
-        public static DateTime FromTimestamp(long timestamp) {
-            return DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
+        public static DateTime FromTimestamp(ulong timestamp) {
+            return DateTimeOffset.FromUnixTimeSeconds((long) timestamp).LocalDateTime;
         }
 
         public static string RenderTimeForShow(DateTime time) {
