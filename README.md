@@ -17,3 +17,5 @@
 + [gRPC Dart Helloworld Example](https://github.com/grpc/grpc-dart/blob/master/example/helloworld/README.md)
 + [Dart package, protoc_plugin](https://pub.dev/packages/protoc_plugin)
 + [Dart package, channel](https://pub.dev/packages/channel)
++ [Interconnecting emulator instances](https://developer.android.com/studio/run/emulator-networking#connecting)
++ [Set up port forwarding](https://developer.android.com/studio/command-line/adb#forwardports)

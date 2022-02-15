@@ -27,10 +27,10 @@ class GrpcServerService {
     );
     try {
       await _server!.serve(address: address, port: port); // 10.0.3.2
-    } on Exception {
+    } on Exception catch (ex) {
       _serverImpl = null;
       _server = null;
-      throw Exception('指定的监听端口被占用');
+      throw Exception('无法监听端口，详细原因：${ex.message()}');
     }
   }
 
@@ -62,15 +62,15 @@ class GrpcServerService {
       // !!!!!!
       var data = PulledTextReply(messageId: messageId, timestamp: timestamp, text: text);
       var reply = PullReply(accepted: true, type: PulledType.TEXT, text: data);
-      await chan.sendForward(reply); // goto TransmitterImpl.Pull
-      var ex = await chan.receiveBackward(); // from TransmitterImpl.Pull
+      await chan.sendForward(reply); // goto TransmitterImpl.pull
+      var ex = await chan.receiveBackward(); // from TransmitterImpl.pull
       if (ex != null) {
         throw ex;
       }
     } on ChannelClosedException {
       // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
     } on Exception catch (ex) {
-      throw Exception('无法连接到服务器：${ex.message()}');
+      throw Exception(util.checkGrpcException(ex, isServer: true));
     }
     var record = MessageRecord(clientId: clientId, clientName: obj.name, messageId: messageId, timestamp: timestamp, text: text); // C <- S
     return record; // 通过返回值通知调用方：消息成功发送至客户端
@@ -155,8 +155,10 @@ class TransmitterImpl extends TransmitterServiceBase {
     while (true) {
       try {
         var reply = await chan.receiveForward(); // from GrpcServerService.sendText
-        yield reply!;
-        await chan.sendBackward(null /* ex */); // goto GrpcServerService.sendText
+        if (reply != null) {
+          yield reply;
+          await chan.sendBackward(null /* ex */); // goto GrpcServerService.sendText
+        }
       } on ChannelClosedException {
         // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
         return; // close stream also

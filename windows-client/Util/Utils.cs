@@ -63,6 +63,17 @@ namespace LanDataTransmitter.Util {
             return time.ToString(time.DayOfYear == now.DayOfYear ? "HH:mm:ss" : "MM-dd HH:mm:ss");
         }
 
+        public static string CheckGrpcException(Exception ex, bool isServer) {
+            var err = ex.Message;
+            if (err.Contains("Network is unreachable")) {
+                return "当前无网络连接";
+            }
+            if (isServer) {
+                return $"无法连接到客户端，详细原因：{ex.Message}";
+            }
+            return $"无法连接到服务器，详细原因：{ex.Message}";
+        }
+
     } // Utils
 
     internal static class NativeMethods {

@@ -187,13 +187,13 @@ namespace LanDataTransmitter.Frm {
                 try {
                     if (Global.Behavior == ApplicationBehavior.AsServer) {
                         await Global.Server.Service.Shutdown();
-                        Global.Server.ConnectedClients.Clear();
                     } else {
                         await Global.Client.Service.Disconnect();
                     }
                 } catch (Exception) {
                     // ignore all exceptions
                 } finally {
+                    Global.Server.ConnectedClients?.Clear();
                     Global.State = ApplicationState.Stopped;
                     this.InvokeAction(() => {
                         btnStop.Enabled = true;
@@ -216,10 +216,10 @@ namespace LanDataTransmitter.Frm {
             await Task.Run(async () => {
                 try {
                     await Global.Server.Service.DisconnectAll();
-                    Global.Server.ConnectedClients.Clear();
                 } catch (Exception) {
                     // ignore all exceptions
                 } finally {
+                    Global.Server.ConnectedClients.Clear();
                     this.InvokeAction(() => {
                         btnForceDisconnect.Enabled = true;
                         cboSendTo.Items.Clear();
@@ -267,21 +267,11 @@ namespace LanDataTransmitter.Frm {
             var obj = new MessageRecordListView.MessageRecordObject { Record = r };
             var time = Utils.RenderTimeForShow(Utils.FromTimestamp(r.Timestamp));
             if (Global.Behavior == ApplicationBehavior.AsServer) {
-                if (r.IsCtS) { // received
-                    obj.InfoLine = $"{r.ClientDisplayName} ({time})";
-                    obj.IsReceived = true;
-                } else { // sent
-                    obj.IsReceived = false;
-                    obj.InfoLine = $"{r.ClientDisplayName} ({time})";
-                }
+                obj.InfoLine = $"{r.ClientDisplayName} ({time})";
+                obj.IsReceived = r.IsCtS;
             } else {
-                if (r.IsStC) { // received
-                    obj.InfoLine = $"server ({time})";
-                    obj.IsReceived = true;
-                } else { // sent
-                    obj.InfoLine = $"server ({time})";
-                    obj.IsReceived = false;
-                }
+                obj.InfoLine = $"server ({time})";
+                obj.IsReceived = r.IsStC;
             }
             lsvRecord.AppendItem(obj);
         }
@@ -375,5 +365,6 @@ namespace LanDataTransmitter.Frm {
         }
 
         #endregion
+
     }
 }

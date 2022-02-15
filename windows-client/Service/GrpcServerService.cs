@@ -37,10 +37,10 @@ namespace LanDataTransmitter.Service {
             };
             try {
                 await Task.Run(() => _server.Start());
-            } catch (IOException) {
+            } catch (Exception ex) {
                 _serverImpl = null;
                 _server = null;
-                throw new Exception("指定的监听端口被占用");
+                throw new Exception($"指定的监听端口被占用，详细原因：{ex.Message}");
             }
         }
 
@@ -82,7 +82,7 @@ namespace LanDataTransmitter.Service {
             } catch (ChannelClosedException) {
                 // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
             } catch (Exception ex) {
-                throw new Exception("无法连接到服务器：" + ex.Message);
+                throw new Exception(Utils.CheckGrpcException(ex, true));
             }
             var record = new MessageRecord(clientId, obj.Name, messageId, timestamp, text); // C <- S
             return record; // 通过返回值通知调用方：消息成功发送至客户端

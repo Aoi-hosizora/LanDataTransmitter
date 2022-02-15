@@ -3,7 +3,6 @@ import 'package:lan_data_transmitter/model/objects.dart';
 import 'package:lan_data_transmitter/model/transmitter.dart';
 import 'package:lan_data_transmitter/service/global.dart';
 import 'package:lan_data_transmitter/service/grpc_server_service.dart';
-import 'package:lan_data_transmitter/util/extensions.dart';
 import 'package:lan_data_transmitter/util/util.dart' as util;
 
 class GrpcClientService {
@@ -32,7 +31,7 @@ class GrpcClientService {
       var request = ConnectRequest(clientName: name);
       reply = await cc.item2.connect(request); // 使服务器记录客户端信息
     } on Exception catch (ex) {
-      throw Exception('无法连接到服务器：${ex.message()}');
+      throw Exception(util.checkGrpcException(ex, isServer: false));
     } finally {
       await cc.item1.shutdown();
     }
@@ -49,7 +48,7 @@ class GrpcClientService {
       var request = DisconnectRequest(clientId: Global.client!.id);
       reply = await cc.item2.disconnect(request); // 使服务器更新并删除客户端信息
     } on Exception catch (ex) {
-      throw Exception('无法连接到服务器：${ex.message()}');
+      throw Exception(util.checkGrpcException(ex, isServer: false));
     } finally {
       await cc.item1.shutdown();
     }
@@ -66,7 +65,7 @@ class GrpcClientService {
       var request = PushTextRequest(clientId: Global.client!.id, timestamp: timestamp, text: text);
       reply = await cc.item2.pushText(request);
     } on Exception catch (ex) {
-      throw Exception('无法连接到服务器：${ex.message()}');
+      throw Exception(util.checkGrpcException(ex, isServer: false));
     } finally {
       await cc.item1.shutdown();
     }
@@ -81,7 +80,7 @@ class GrpcClientService {
       var request = PullRequest(clientId: Global.client!.id);
       stream = cc.item2.pull(request);
     } on Exception catch (ex) {
-      throw Exception('无法连接到服务器：${ex.message()}');
+      throw Exception(util.checkGrpcException(ex, isServer: false));
     }
     // !!!!!!
     await for (var reply in stream) {

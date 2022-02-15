@@ -25,8 +25,8 @@ class BiChannel<TForward, TBackward> {
     return data;
   }
 
-  Future<TForward?> receiveBackward() async {
-    var data = await _forwardChannel.receive();
+  Future<TBackward?> receiveBackward() async {
+    var data = await _backwardChannel.receive();
     return data;
   }
 

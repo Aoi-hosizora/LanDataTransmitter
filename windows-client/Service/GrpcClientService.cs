@@ -33,7 +33,7 @@ namespace LanDataTransmitter.Service {
                 var request = new ConnectRequest { ClientName = name /* may be empty */ };
                 reply = await client.ConnectAsync(request); // 使服务器记录客户端信息
             } catch (Exception ex) {
-                throw new Exception("无法连接到服务器：" + ex.Message);
+                throw new Exception(Utils.CheckGrpcException(ex, false));
             } finally {
                 await channel.ShutdownAsync();
             }
@@ -50,7 +50,7 @@ namespace LanDataTransmitter.Service {
                 var request = new DisconnectRequest { ClientId = Global.Client.Id };
                 reply = await client.DisconnectAsync(request); // 使服务器更新并删除客户端信息
             } catch (Exception ex) {
-                throw new Exception("无法连接到服务器：" + ex.Message);
+                throw new Exception(Utils.CheckGrpcException(ex, false));
             } finally {
                 await channel.ShutdownAsync();
             }
@@ -67,7 +67,7 @@ namespace LanDataTransmitter.Service {
                 var request = new PushTextRequest { ClientId = Global.Client.Id, Timestamp = timestamp, Text = text };
                 reply = await client.PushTextAsync(request);
             } catch (Exception ex) {
-                throw new Exception("无法连接到服务器：" + ex.Message);
+                throw new Exception(Utils.CheckGrpcException(ex, false));
             } finally {
                 await channel.ShutdownAsync();
             }
@@ -85,7 +85,7 @@ namespace LanDataTransmitter.Service {
                 var request = new PullRequest { ClientId = Global.Client.Id };
                 stream = client.Pull(request).ResponseStream;
             } catch (Exception ex) {
-                throw new Exception("无法连接到服务器：" + ex.Message);
+                throw new Exception(Utils.CheckGrpcException(ex, false));
             }
             // !!!!!!
             while (await stream.MoveNext()) {

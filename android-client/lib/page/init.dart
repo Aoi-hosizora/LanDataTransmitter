@@ -21,7 +21,7 @@ class _InitPageState extends State<InitPage> {
   final _targetAddrController = TextEditingController();
   final _targetPortController = TextEditingController();
   final _clientNameController = TextEditingController();
-  var _behavior = ApplicationBehavior.server;
+  var _behavior = ApplicationBehavior.asServer;
   var _trying = false;
 
   @override
@@ -61,14 +61,14 @@ class _InitPageState extends State<InitPage> {
     return (port >= 1024 && port <= 65535) ? null : '端口号仅允许在 [1024, 65535] 范围内';
   }
 
-  void _start() async {
-    if (_behavior == ApplicationBehavior.server && !_serverFormKey.currentState!.validate()) return;
-    if (_behavior == ApplicationBehavior.client && !_clientFormKey.currentState!.validate()) return;
+  void _onStartPressed() async {
+    if (_behavior == ApplicationBehavior.asServer && !_serverFormKey.currentState!.validate()) return;
+    if (_behavior == ApplicationBehavior.asClient && !_clientFormKey.currentState!.validate()) return;
     _trying = true;
     if (mounted) setState(() {});
 
     try {
-      if (_behavior == ApplicationBehavior.server) {
+      if (_behavior == ApplicationBehavior.asServer) {
         var addr = _serveAddrController.text, port = int.tryParse(_servePortController.text)!;
         var service = GrpcServerService(addr, port);
         await service.serve();
@@ -88,7 +88,7 @@ class _InitPageState extends State<InitPage> {
     } on Exception catch (ex) {
       _trying = false;
       if (mounted) setState(() {});
-      if (_behavior == ApplicationBehavior.server) {
+      if (_behavior == ApplicationBehavior.asServer) {
         showInfo(title: '监听失败', message: '无法监听指定的地址和端口。\n原因：${ex.message()}');
       } else {
         showInfo(title: '连接失败', message: '无法连接到指定的地址和端口。\n原因：${ex.message()}');
@@ -118,35 +118,35 @@ class _InitPageState extends State<InitPage> {
                   child: Row(
                     children: [
                       Radio<ApplicationBehavior>(
-                        value: ApplicationBehavior.server,
+                        value: ApplicationBehavior.asServer,
                         groupValue: _behavior,
-                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.server),
+                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.asServer),
                       ),
                       Text('作为服务器'),
                       SizedBox(width: 16),
                     ],
                   ),
-                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.server),
+                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.asServer),
                 ),
                 InkWell(
                   child: Row(
                     children: [
                       Radio<ApplicationBehavior>(
-                        value: ApplicationBehavior.client,
+                        value: ApplicationBehavior.asClient,
                         groupValue: _behavior,
-                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.client),
+                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.asClient),
                       ),
                       Text('作为客户端'),
                       SizedBox(width: 16),
                     ],
                   ),
-                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.client),
+                  onTap: () => mountedSetState(() => _behavior = ApplicationBehavior.asClient),
                 ),
               ],
             ),
 
             /// server form
-            if (_behavior == ApplicationBehavior.server)
+            if (_behavior == ApplicationBehavior.asServer)
               Form(
                 key: _serverFormKey,
                 child: Padding(
@@ -183,7 +183,7 @@ class _InitPageState extends State<InitPage> {
               ),
 
             /// client form
-            if (_behavior == ApplicationBehavior.client)
+            if (_behavior == ApplicationBehavior.asClient)
               Form(
                 key: _clientFormKey,
                 child: Padding(
@@ -239,7 +239,7 @@ class _InitPageState extends State<InitPage> {
                       width: 100,
                       child: ElevatedButton(
                         child: Text('开始'),
-                        onPressed: _start,
+                        onPressed: _onStartPressed,
                       ),
                     )
                   : Row(
@@ -251,7 +251,7 @@ class _InitPageState extends State<InitPage> {
                           child: CircularProgressIndicator(),
                         ),
                         SizedBox(width: 20),
-                        Text(_behavior == ApplicationBehavior.server ? '尝试监听...' : '尝试连接...'),
+                        Text(_behavior == ApplicationBehavior.asServer ? '尝试监听...' : '尝试连接...'),
                       ],
                     ),
             ),

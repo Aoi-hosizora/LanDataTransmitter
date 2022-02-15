@@ -9,8 +9,8 @@ namespace LanDataTransmitter.Util {
         private readonly Channel<TBackward> _backwardChannel;
 
         public BiChannel() {
-            _forwardChannel = Channel.CreateBounded<TForward>(0);
-            _backwardChannel = Channel.CreateBounded<TBackward>(0);
+            _forwardChannel = Channel.CreateBounded<TForward>(1);
+            _backwardChannel = Channel.CreateBounded<TBackward>(1);
         }
 
         public async Task SendForward(TForward data) {
