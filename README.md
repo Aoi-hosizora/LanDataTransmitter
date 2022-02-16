@@ -1,6 +1,11 @@
 # LanDataTransmitter
 
-+ Windows (Winforms) and Android (Flutter) clients to transmit data, such as plain text and file, between hosts in the same LAN.
++ Windows (developed by Winforms) and Android (developed by Flutter) clients to transmit data, such as plain text and file, between hosts in the same LAN.
+
+### Environment
+
++ Windows: .NET Framework v4.8, C# 8.0
++ Android: Flutter 2.10.1 stable channel, Dart 2.16.1
 
 ### Reference
 

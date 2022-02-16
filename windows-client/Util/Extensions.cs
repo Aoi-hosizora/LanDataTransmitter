@@ -20,6 +20,13 @@ namespace LanDataTransmitter.Util {
             };
         }
 
+        public static void EnableLabelTooltip(this Label lbl, ToolTip tip) {
+            lbl.MouseEnter += (sender, e) => {
+                var selected = lbl.Text;
+                tip.SetToolTip(lbl, selected);
+            };
+        }
+
         public static void ShowError(this Form _, string title, string message) {
             MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

@@ -13,31 +13,32 @@ namespace LanDataTransmitter.Util {
         private static Dictionary<string, string> _networkInterfaces;
 
         public static IEnumerable<string> GetNetworkInterfaces() {
-            var interfaces = new List<(NetworkInterface, UnicastIPAddressInformation)>();
-            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces()) {
-                foreach (var addr in ni.GetIPProperties().UnicastAddresses) {
-                    if (addr.Address.AddressFamily == AddressFamily.InterNetwork) {
-                        interfaces.Add((ni, addr));
-                        break;
+            if (_networkInterfaces == null || _networkInterfaces.Count == 0) {
+                var interfaces = new List<(NetworkInterface, UnicastIPAddressInformation)>();
+                foreach (var ni in NetworkInterface.GetAllNetworkInterfaces()) {
+                    foreach (var addr in ni.GetIPProperties().UnicastAddresses) {
+                        if (addr.Address.AddressFamily == AddressFamily.InterNetwork) {
+                            interfaces.Add((ni, addr));
+                            break;
+                        }
                     }
                 }
-            }
 
-            const string all = "All interfaces (serve on 0.0.0.0)";
-            _networkInterfaces = new Dictionary<string, string> { [all] = "0.0.0.0" };
-            foreach (var (ni, addr) in interfaces) {
-                _networkInterfaces[ni.Description] = addr.Address.ToString();
+                _networkInterfaces = new Dictionary<string, string> { ["All interfaces (serve on 0.0.0.0)"] = "0.0.0.0" };
+                foreach (var (ni, addr) in interfaces) {
+                    _networkInterfaces[ni.Description] = addr.Address.ToString();
+                }
             }
-
-            var result = interfaces.Select(i => i.Item1.Description).ToList();
-            result.Insert(0, all);
-            return result;
+            return _networkInterfaces.Keys.ToList();
         }
 
         public static string GetNetworkInterfaceIPv4(string description) {
-            var ok = _networkInterfaces.TryGetValue(description, out var address);
+            if (_networkInterfaces == null || _networkInterfaces.Count == 0) {
+                var _ = GetNetworkInterfaces();
+            }
+            var ok = _networkInterfaces!.TryGetValue(description, out var address);
             if (!ok) {
-                address = "unknown";
+                address = "0.0.0.0";
             }
             return address;
         }
@@ -58,7 +59,7 @@ namespace LanDataTransmitter.Util {
             return DateTimeOffset.FromUnixTimeSeconds((long) timestamp).LocalDateTime;
         }
 
-        public static string RenderTimeForShow(DateTime time) {
+        public static string FormatTimeForShow(DateTime time) {
             var now = DateTime.Now;
             return time.ToString(time.DayOfYear == now.DayOfYear ? "HH:mm:ss" : "MM-dd HH:mm:ss");
         }

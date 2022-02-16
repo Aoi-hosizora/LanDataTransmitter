@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lan_data_transmitter/model/objects.dart';
+import 'package:lan_data_transmitter/page/message_detail.dart';
 import 'package:lan_data_transmitter/service/global.dart';
 import 'package:lan_data_transmitter/util/util.dart' as util;
 
@@ -20,7 +21,7 @@ const String newLineSymbol = '↴';
 class _MessageRecordLineState extends State<MessageRecordLine> {
   @override
   Widget build(BuildContext context) {
-    var time = util.renderTimeForShow(util.fromTimestamp(widget.record.timestamp));
+    var time = util.formatTimeForShow(util.fromTimestamp(widget.record.timestamp));
     String infoLine;
     bool isReceived;
     if (Global.behavior == ApplicationBehavior.asServer) {
@@ -35,7 +36,13 @@ class _MessageRecordLineState extends State<MessageRecordLine> {
     line1 = isReceived ? '→ $line1' : '$line1 ←';
     line2 = line2.replaceAll('\r\n', newLineSymbol).replaceAll('\n', newLineSymbol);
     return InkWell(
-      onTap: () {},
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (c) => MessageDetailPage(
+            record: widget.record,
+          ),
+        ),
+      ),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child: Column(
@@ -47,7 +54,7 @@ class _MessageRecordLineState extends State<MessageRecordLine> {
                 line1,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textAlign: isReceived ? TextAlign.left : TextAlign.right,
+                textAlign: isReceived ? TextAlign.start : TextAlign.end,
               ),
             ),
             SizedBox(height: 4),
@@ -57,7 +64,7 @@ class _MessageRecordLineState extends State<MessageRecordLine> {
                 line2,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textAlign: isReceived ? TextAlign.left : TextAlign.right,
+                textAlign: isReceived ? TextAlign.start : TextAlign.end,
               ),
             ),
           ],

@@ -1,7 +1,6 @@
 import 'package:lan_data_transmitter/model/objects.dart';
 import 'package:lan_data_transmitter/service/grpc_client_service.dart';
 import 'package:lan_data_transmitter/service/grpc_server_service.dart';
-import 'package:lan_data_transmitter/util/bichannel.dart';
 
 enum ApplicationBehavior { asServer, asClient }
 enum ApplicationState { preparing, running, stopped }

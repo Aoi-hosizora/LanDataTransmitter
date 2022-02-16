@@ -69,15 +69,15 @@ extension ExceptionExtension on Exception {
   }
 }
 
-extension FutureExtension<T> on Future<T> {
-  Future<T> enableTry() {
-    var completer = Completer<T>();
-    dynamic ex;
-    then((value) {
-      completer.complete(value);
-    }).catchError((e) {
-      ex = e;
-    });
-    return completer.future;
+extension ScrollControllerExtension on ScrollController {
+  void scrollToBottom() {
+    if (hasClients) {
+      // ScrollController not attached to any scroll views.
+      animateTo(
+        position.maxScrollExtent,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOutQuint,
+      );
+    }
   }
 }

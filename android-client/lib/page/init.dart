@@ -22,6 +22,8 @@ class _InitPageState extends State<InitPage> {
   final _targetPortController = TextEditingController();
   final _clientNameController = TextEditingController();
   var _behavior = ApplicationBehavior.asServer;
+  var _interfaces = <String>['　'];
+  String? _selectedInterface;
   var _trying = false;
 
   @override
@@ -31,6 +33,11 @@ class _InitPageState extends State<InitPage> {
     _servePortController.text = '10240';
     _targetAddrController.text = '127.0.0.1';
     _targetPortController.text = '10240';
+    util.getNetworkInterfaces().then((list) {
+      _interfaces = list;
+      _selectedInterface = list.first;
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -153,16 +160,33 @@ class _InitPageState extends State<InitPage> {
                   padding: EdgeInsets.only(left: 8, right: 8, top: 4),
                   child: Column(
                     children: [
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        value: _selectedInterface ?? '　',
+                        items: [for (var i in _interfaces) DropdownMenuItem<String>(value: i, child: Text(i))],
+                        onChanged: (newValue) async {
+                          _selectedInterface = newValue ?? '　';
+                          if (mounted) setState(() {});
+                          _serveAddrController.text = await util.getNetworkInterfaceIPv4(_selectedInterface!);
+                        },
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.only(top: 6, bottom: 2),
+                          labelText: '网络接口',
+                          icon: Icon(Icons.schema),
+                        ),
+                        style: Theme.of(context).textTheme.subtitle1!.copyWith(color: !_trying ? null : Theme.of(context).hintColor),
+                      ),
+                      SizedBox(height: 4),
                       TextFormField(
                         controller: _serveAddrController,
                         enabled: !_trying,
                         readOnly: true,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '监听地址 (总是监听所有网络接口的地址)',
+                          labelText: '监听地址',
                           icon: Icon(Icons.public),
                         ),
-                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        style: TextStyle(color: Theme.of(context).hintColor),
                       ),
                       SizedBox(height: 4),
                       TextFormField(
@@ -231,7 +255,7 @@ class _InitPageState extends State<InitPage> {
               ),
 
             /// start button
-            SizedBox(height: 20),
+            SizedBox(height: 35),
             Center(
               child: !_trying
                   ? SizedBox(

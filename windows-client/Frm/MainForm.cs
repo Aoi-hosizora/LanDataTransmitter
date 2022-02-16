@@ -44,6 +44,10 @@ namespace LanDataTransmitter.Frm {
                 splContent.Height = cboSendTo.Top + cboSendTo.Height - splContent.Top;
             }
             cmsListView.Renderer = new MenuNativeRenderer();
+            lblBehavior.EnableLabelTooltip(tipMain);
+            lblClientInfo.EnableLabelTooltip(tipMain);
+            btnRestart.Left = btnStop.Left;
+            btnRestart.Anchor = AnchorStyles.Right | AnchorStyles.Top;
             cboSendTo.EnableComboBoxTooltip(tipMain);
             UpdateButtonsState();
             UpdateLabelsState();
@@ -62,7 +66,11 @@ namespace LanDataTransmitter.Frm {
             var emptyText = edtText.Text.Trim().Length == 0;
 
             if (Global.Behavior == ApplicationBehavior.AsServer) {
+                // vis
                 btnRestart.Visible = notRunning;
+                btnForceDisconnect.Visible = !notRunning;
+                btnStop.Visible = !notRunning;
+                // able
                 btnForceDisconnect.Enabled = !notRunning && !noClient;
                 btnStop.Enabled = !notRunning;
                 cboSendTo.Enabled = !notRunning && !noClient;
@@ -70,8 +78,11 @@ namespace LanDataTransmitter.Frm {
                 btnSendText.Enabled = !notRunning && !noClient && !emptyText;
                 btnSendFile.Enabled = !notRunning && !noClient;
             } else {
+                // vis
                 btnRestart.Visible = notRunning;
                 btnForceDisconnect.Visible = false;
+                btnStop.Visible = !notRunning;
+                // able
                 btnStop.Enabled = !notRunning;
                 btnSendText.Enabled = !notRunning && !emptyText;
                 btnSendFile.Enabled = !notRunning;
@@ -264,16 +275,7 @@ namespace LanDataTransmitter.Frm {
         #region Append list, Send
 
         private void AppendRecordToList(MessageRecord r) {
-            var obj = new MessageRecordListView.MessageRecordObject { Record = r };
-            var time = Utils.RenderTimeForShow(Utils.FromTimestamp(r.Timestamp));
-            if (Global.Behavior == ApplicationBehavior.AsServer) {
-                obj.InfoLine = $"{r.ClientDisplayName} ({time})";
-                obj.IsReceived = r.IsCtS;
-            } else {
-                obj.InfoLine = $"server ({time})";
-                obj.IsReceived = r.IsStC;
-            }
-            lsvRecord.AppendItem(obj);
+            lsvRecord.AppendItem(r);
         }
 
         public void SelectMessageRecordInList(int index) {
@@ -333,9 +335,9 @@ namespace LanDataTransmitter.Frm {
                 return;
             }
             var item = lsvRecord.SelectedItems[0];
-            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
+            if (item.Tag is MessageRecordListView.MessageRecordTag tag) {
                 var index = lsvRecord.SelectedIndices[0];
-                var f = new MessageDetailForm(obj.Record, index);
+                var f = new MessageDetailForm(tag.Record, index);
                 f.Show(this);
             }
         }
@@ -349,8 +351,8 @@ namespace LanDataTransmitter.Frm {
                 return;
             }
             var item = lsvRecord.SelectedItems[0];
-            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
-                Clipboard.SetText(obj.InfoLine);
+            if (item.Tag is MessageRecordListView.MessageRecordTag tag) {
+                Clipboard.SetText(tag.InfoLine);
             }
         }
 
@@ -359,8 +361,8 @@ namespace LanDataTransmitter.Frm {
                 return;
             }
             var item = lsvRecord.SelectedItems[0];
-            if (item.Tag is MessageRecordListView.MessageRecordObject obj) {
-                Clipboard.SetText(obj.Record.Text);
+            if (item.Tag is MessageRecordListView.MessageRecordTag tag) {
+                Clipboard.SetText(tag.Record.Text);
             }
         }
 

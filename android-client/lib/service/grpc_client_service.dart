@@ -20,7 +20,7 @@ class GrpcClientService {
         codecRegistry: CodecRegistry(codecs: [GzipCodec(), IdentityCodec()]),
       ),
     );
-    var client = TransmitterClient(channel);
+    var client = TransmitterClient(channel); // <- not connect yet
     return util.Tuple(channel, client);
   }
 
@@ -28,7 +28,7 @@ class GrpcClientService {
     var cc = _createClient();
     ConnectReply reply;
     try {
-      var request = ConnectRequest(clientName: name);
+      var request = ConnectRequest(clientName: name /* may be empty */);
       reply = await cc.item2.connect(request); // 使服务器记录客户端信息
     } on Exception catch (ex) {
       throw Exception(util.checkGrpcException(ex, isServer: false));
@@ -68,6 +68,9 @@ class GrpcClientService {
       throw Exception(util.checkGrpcException(ex, isServer: false));
     } finally {
       await cc.item1.shutdown();
+    }
+    if (!reply.accepted) {
+      throw Exception('当前客户端未连接到服务器');
     }
     var record = MessageRecord(clientId: Global.client!.id, clientName: Global.client!.name, messageId: reply.messageId, timestamp: timestamp, text: text); // C -> S
     return record; // 通过返回值通知调用方：消息成功发送至服务器

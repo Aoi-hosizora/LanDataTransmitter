@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:grpc/grpc.dart';
 import 'package:lan_data_transmitter/model/objects.dart';
 import 'package:lan_data_transmitter/model/transmitter.dart';
@@ -36,18 +38,27 @@ class GrpcServerService {
 
   Future<void> shutdown() async {
     await disconnectAll('服务器已关闭');
-    await _server?.shutdown();
+    /* await */ _server?.shutdown(); // <- slow
   }
 
   Future<void> disconnectAll([String? message]) async {
     message ??= '服务器要求断开连接';
-    for (var id in Global.server!.connectedClients.keys) {
-      var chan = Global.server!.connectedClients[id]!.pullChannel;
-      var data = PulledDisconnectReply(disconnect: true);
-      await chan.sendForward(PullReply(accepted: true, type: PulledType.DISCONNECT, disconnect: data));
-      var _ = await chan.receiveBackward();
-      chan.complete(message);
-    }
+    var futures = <Future<void>>[];
+    Global.server!.connectedClients.forEach((key, value) {
+      futures.add(Future.microtask(() async {
+        var chan = value.pullChannel;
+        try {
+          var data = PulledDisconnectReply(disconnect: true);
+          var reply = PullReply(accepted: true, type: PulledType.DISCONNECT, disconnect: data);
+          await chan.sendForward(reply);
+          var _ = await chan.receiveBackward(); // ignore exception
+          chan.complete(message);
+        } on Exception {
+          // ignore all exceptions
+        }
+      }));
+    });
+    await Future.wait(futures);
   }
 
   Future<MessageRecord> sendText(String clientId, String text, DateTime time) async {
@@ -156,7 +167,7 @@ class TransmitterImpl extends TransmitterServiceBase {
       try {
         var reply = await chan.receiveForward(); // from GrpcServerService.sendText
         if (reply != null) {
-          yield reply;
+          yield reply; // TODO error???
           await chan.sendBackward(null /* ex */); // goto GrpcServerService.sendText
         }
       } on ChannelClosedException {

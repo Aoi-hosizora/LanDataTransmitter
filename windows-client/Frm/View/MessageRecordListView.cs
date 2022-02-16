@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using LanDataTransmitter.Model;
+using LanDataTransmitter.Service;
 using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Frm.View {
@@ -87,12 +88,12 @@ namespace LanDataTransmitter.Frm.View {
         #endregion
 
         protected override void OnDrawItem(DrawListViewItemEventArgs e) {
-            if (!(e.Item.Tag is MessageRecordObject obj)) {
+            if (!(e.Item.Tag is MessageRecordTag tag)) {
                 e.DrawDefault = true;
                 return;
             }
             var flag = TextFormatFlags.VerticalCenter | TextFormatFlags.WordEllipsis | TextFormatFlags.NoPrefix;
-            if (obj.IsReceived) {
+            if (tag.IsReceived) {
                 flag |= TextFormatFlags.Left;
             } else {
                 flag |= TextFormatFlags.Right;
@@ -134,8 +135,17 @@ namespace LanDataTransmitter.Frm.View {
 
         private const string NewLineSymbol = "↴";
 
-        public void AppendItem(MessageRecordObject obj) {
-            var (line1, line2) = (obj.InfoLine, obj.Record.Text);
+        public void AppendItem(MessageRecord r) {
+            var time = Utils.FormatTimeForShow(Utils.FromTimestamp(r.Timestamp));
+            var obj = new MessageRecordTag { Record = r };
+            if (Global.Behavior == ApplicationBehavior.AsServer) {
+                obj.InfoLine = $"{r.ClientDisplayName} ({time})";
+                obj.IsReceived = r.IsCtS;
+            } else {
+                obj.InfoLine = $"server ({time})";
+                obj.IsReceived = r.IsStC;
+            }
+            var (line1, line2) = (obj.InfoLine, r.Text);
             line1 = obj.IsReceived ? "→ " + line1 : line1 + " ←";
             line2 = line2.Replace("\r\n", NewLineSymbol).Replace("\n", NewLineSymbol);
             var lvi = new ListViewItem { Text = line1 + Environment.NewLine + line2, Tag = obj };
@@ -143,7 +153,7 @@ namespace LanDataTransmitter.Frm.View {
             SetSingleSelected(Items.Count - 1);
         }
 
-        public class MessageRecordObject {
+        public class MessageRecordTag {
             public MessageRecord Record { get; set; }
             public string InfoLine { get; set; }
             public bool IsReceived { get; set; }

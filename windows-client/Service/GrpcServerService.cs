@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -46,20 +46,30 @@ namespace LanDataTransmitter.Service {
 
         public async Task Shutdown() {
             await DisconnectAll("服务器已关闭");
-            if (_server != null) {
-                await _server.ShutdownAsync();
-            }
+            // if (_server != null) {
+            //     await _server.ShutdownAsync();
+            // }
+            _server?.ShutdownAsync(); // <- slow
         }
 
         public async Task DisconnectAll(string message = null) {
             message ??= "服务器要求断开连接";
-            foreach (var id in Global.Server.ConnectedClients.Keys) {
-                var chan = Global.Server.ConnectedClients[id].PullChannel;
-                var data = new PulledDisconnectReply { Disconnect = true };
-                await chan.SendForward(new PullReply { Accepted = true, Type = PulledType.Disconnect, Disconnect = data });
-                var _ = await chan.ReceiveBackward();
-                chan.Complete(message);
-            }
+            var tasks = new List<Task>();
+            Global.Server.ConnectedClients.Values.ToList().ForEach(obj => {
+                tasks.Add(Task.Run(async () => {
+                    var chan = obj.PullChannel;
+                    try {
+                        var data = new PulledDisconnectReply { Disconnect = true };
+                        var reply = new PullReply { Accepted = true, Type = PulledType.Disconnect, Disconnect = data };
+                        await chan.SendForward(reply);
+                        var _ = await chan.ReceiveBackward(); // ignore exception
+                        chan.Complete(message);
+                    } catch (Exception) {
+                        // ignore all exceptions
+                    }
+                }));
+            });
+            await Task.WhenAll(tasks.ToArray());
         }
 
         public async Task<MessageRecord> SendText(string clientId, string text, DateTime time) {
@@ -158,7 +168,7 @@ namespace LanDataTransmitter.Service {
                 // WriteAsync: Only one write can be pending at a time
                 try {
                     var reply = await chan.ReceiveForward(); // from GrpcServerService.SendText
-                    await responseStream.WriteAsync(reply);
+                    await responseStream.WriteAsync(reply); // TODO error???
                     await chan.SendBackward(null /* ex */); // goto GrpcServerService.SendText
                 } catch (ChannelClosedException) {
                     // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接

@@ -19,7 +19,7 @@ namespace LanDataTransmitter.Service {
 
         private Tuple<GrpcChannel, Transmitter.TransmitterClient> CreateClient() {
             var channel = new GrpcChannel(Address, Port, ChannelCredentials.Insecure);
-            var client = new Transmitter.TransmitterClient(channel); // <- here will not connect to server
+            var client = new Transmitter.TransmitterClient(channel); // <- not connect yet
             return new Tuple<Channel, Transmitter.TransmitterClient>(channel, client);
         }
 
