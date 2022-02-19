@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace LanDataTransmitter.Util {
@@ -24,6 +25,20 @@ namespace LanDataTransmitter.Util {
             lbl.MouseEnter += (sender, e) => {
                 var selected = lbl.Text;
                 tip.SetToolTip(lbl, selected);
+            };
+        }
+
+        public static void EnableDefaultDrawItem(this ComboBox cbo) {
+            cbo.DrawItem += (sender, e) => {
+                var g = e.Graphics;
+                var self = (ComboBox) sender;
+                var (foreColor, backColor) = (self.ForeColor, self.BackColor);
+                if ((e.State & DrawItemState.Selected) == DrawItemState.Selected) {
+                    (foreColor, backColor) = (SystemColors.HighlightText, SystemColors.Highlight);
+                }
+                e.DrawBackground();
+                g.FillRectangle(new SolidBrush(backColor), e.Bounds);
+                g.DrawString(self.Items[e.Index].ToString(), self.Font, new SolidBrush(foreColor), new Point(e.Bounds.X, e.Bounds.Y));
             };
         }
 

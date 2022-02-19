@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:grpc/grpc.dart';
 import 'package:lan_data_transmitter/model/objects.dart';
 import 'package:lan_data_transmitter/model/transmitter.dart';
@@ -28,7 +26,8 @@ class GrpcServerService {
       CodecRegistry(codecs: [GzipCodec(), IdentityCodec()]),
     );
     try {
-      await _server!.serve(address: address, port: port); // 10.0.3.2
+      await _server!.serve(address: address, port: port);
+      // $ adb forward tcp:10240 tcp:10240
     } on Exception catch (ex) {
       _serverImpl = null;
       _server = null;
@@ -38,7 +37,8 @@ class GrpcServerService {
 
   Future<void> shutdown() async {
     await disconnectAll('服务器已关闭');
-    /* await */ _server?.shutdown(); // <- slow
+    /* await */
+    _server?.shutdown(); // <- slow
   }
 
   Future<void> disconnectAll([String? message]) async {

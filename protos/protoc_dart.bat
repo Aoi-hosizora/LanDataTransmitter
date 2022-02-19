@@ -7,8 +7,7 @@
 :: `C:\Users\AoiHosizora\AppData\Local\Pub\Cache\bin\protoc-gen-dart.bat` =>
 :: "D:\Development\flutter\bin\cache\dart-sdk\bin\pub.bat" global run protoc_plugin:protoc_plugin %*
 
-:: protoc --dart_out=grpc:./lib/model -I../protos ../protos/transmitter.proto
 protoc ^
-	--dart_out=grpc:.\lib\model ^
-	--proto_path=..\protos ^
-	..\protos\transmitter.proto
+	--dart_out=grpc:..\android-client\lib\model ^
+	--proto_path=. ^
+	.\transmitter.proto

@@ -24,18 +24,36 @@ namespace LanDataTransmitter.Frm {
             }
         }
 
+        private History _history;
+
         private void InitForm_Load(object sender, EventArgs e) {
             // ui
             Height -= grpClient.Top - grpServer.Top;
             grpClient.Top = grpServer.Top;
-            rdoServer.Checked = true;
+            if (Global.Behavior == ApplicationBehavior.AsServer) {
+                rdoServer.Checked = true;
+            } else {
+                rdoClient.Checked = true;
+            }
             cboServeInterface.EnableComboBoxTooltip(tipMain);
+            cboTargetAddress.EnableDefaultDrawItem();
+            cboClientName.EnableDefaultDrawItem();
 
             // interface
             var interfaces = Utils.GetNetworkInterfaces();
             cboServeInterface.Items.AddRange(interfaces.ToArray<object>());
             cboServeInterface.SelectedIndex = 0;
 
+            // history
+            _history = new History();
+            numServePort.Value = _history.GetServedPorts().First();
+            cboTargetAddress.Items.AddRange(_history.GetTargetAddresses().Cast<object>().ToArray());
+            cboTargetAddress.Text = cboTargetAddress.Items[0].ToString();
+            numTargetPort.Value = _history.GetTargetPorts().First();
+            cboClientName.Items.AddRange(_history.GetClientNames().Cast<object>().ToArray());
+            cboClientName.Text = cboClientName.Items[0].ToString();
+
+            // state
             Global.State = ApplicationState.Preparing;
         }
 
@@ -65,11 +83,15 @@ namespace LanDataTransmitter.Frm {
                         var service = new GrpcServerService(addr, port);
                         await service.Serve();
                         Global.InitializeServer(service); // => ApplicationState.Running
+                        _history.AddServerHistory(service.Port);
+                        _history.Save();
                     } else {
-                        var (addr, port, name) = (edtTargetAddress.Text.Trim(), (int) numTargetPort.Value, edtClientName.Text.Trim());
+                        var (addr, port, name) = (cboTargetAddress.Text.Trim(), (int) numTargetPort.Value, cboClientName.Text.Trim());
                         var service = new GrpcClientService(addr, port);
                         var id = await service.Connect(name);
                         Global.InitializeClient(id, name, service); // => ApplicationState.Running
+                        _history.AddClientHistory(service.Address, service.Port, name);
+                        _history.Save();
                     }
                     this.InvokeAction(() => {
                         MainForm.Instance.Show();

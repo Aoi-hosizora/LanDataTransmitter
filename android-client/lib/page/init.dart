@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:lan_data_transmitter/page/main.dart';
+import 'package:lan_data_transmitter/page/view/suggestion_text_form_field.dart';
 import 'package:lan_data_transmitter/service/global.dart';
 import 'package:lan_data_transmitter/service/grpc_client_service.dart';
 import 'package:lan_data_transmitter/service/grpc_server_service.dart';
+import 'package:lan_data_transmitter/service/history.dart';
 import 'package:lan_data_transmitter/util/extensions.dart';
 import 'package:lan_data_transmitter/util/util.dart' as util;
 
@@ -21,6 +24,8 @@ class _InitPageState extends State<InitPage> {
   final _targetAddrController = TextEditingController();
   final _targetPortController = TextEditingController();
   final _clientNameController = TextEditingController();
+
+  History? _history;
   var _behavior = ApplicationBehavior.asServer;
   var _interfaces = <String>['　'];
   String? _selectedInterface;
@@ -29,6 +34,7 @@ class _InitPageState extends State<InitPage> {
   @override
   void initState() {
     super.initState();
+    _behavior = Global.behavior;
     _serveAddrController.text = '0.0.0.0';
     _servePortController.text = '10240';
     _targetAddrController.text = '127.0.0.1';
@@ -36,6 +42,15 @@ class _InitPageState extends State<InitPage> {
     util.getNetworkInterfaces().then((list) {
       _interfaces = list;
       _selectedInterface = list.first;
+      if (mounted) setState(() {});
+    });
+
+    History.create().then((h) {
+      _history = h;
+      _servePortController.text = h.getServedPorts().first;
+      _targetAddrController.text = h.getTargetAddresses().first;
+      _targetPortController.text = h.getTargetPorts().first;
+      _clientNameController.text = h.getClientNames().first;
       if (mounted) setState(() {});
     });
   }
@@ -74,37 +89,52 @@ class _InitPageState extends State<InitPage> {
     _trying = true;
     if (mounted) setState(() {});
 
-    try {
-      if (_behavior == ApplicationBehavior.asServer) {
-        var addr = _serveAddrController.text, port = int.tryParse(_servePortController.text)!;
-        var service = GrpcServerService(addr, port);
-        await service.serve();
-        Global.initializeServer(service); // => ApplicationState.Running
-      } else {
-        var addr = _targetAddrController.text, port = int.tryParse(_targetPortController.text)!, name = _clientNameController.text;
-        var service = GrpcClientService(addr, port);
-        var id = await service.connect(name);
-        Global.initializeClient(service, id, name); // => ApplicationState.Running
+    // !!!!!!
+    await Future.microtask(() async {
+      try {
+        if (_behavior == ApplicationBehavior.asServer) {
+          var addr = _serveAddrController.text, port = int.tryParse(_servePortController.text)!;
+          var service = GrpcServerService(addr, port);
+          await service.serve();
+          Global.initializeServer(service); // => ApplicationState.Running
+          _history?.addServerHistory(port);
+          await _history?.save();
+        } else {
+          var addr = _targetAddrController.text, port = int.tryParse(_targetPortController.text)!, name = _clientNameController.text;
+          var service = GrpcClientService(addr, port);
+          var id = await service.connect(name);
+          Global.initializeClient(service, id, name); // => ApplicationState.Running
+          _history?.addClientHistory(addr, port, name);
+          await _history?.save();
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (c) => MainPage(),
+          ),
+          (r) => false,
+        );
+      } on Exception catch (ex) {
+        _trying = false;
+        if (mounted) setState(() {});
+        if (_behavior == ApplicationBehavior.asServer) {
+          showInfo(title: '监听失败', message: '无法监听指定的地址和端口。\n原因：${ex.message()}');
+        } else {
+          showInfo(title: '连接失败', message: '无法连接到指定的地址和端口。\n原因：${ex.message()}');
+        }
       }
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (c) => MainPage(),
-        ),
-        (r) => false,
-      );
-    } on Exception catch (ex) {
-      _trying = false;
-      if (mounted) setState(() {});
-      if (_behavior == ApplicationBehavior.asServer) {
-        showInfo(title: '监听失败', message: '无法监听指定的地址和端口。\n原因：${ex.message()}');
-      } else {
-        showInfo(title: '连接失败', message: '无法连接到指定的地址和端口。\n原因：${ex.message()}');
-      }
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    const suggestionsBoxVerticalOffset = 4.0;
+    final suggestionsBoxDecoration = SuggestionsBoxDecoration(
+      offsetX: 36,
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width - 70,
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text('LAN Data Transmitter'),
@@ -127,9 +157,12 @@ class _InitPageState extends State<InitPage> {
                       Radio<ApplicationBehavior>(
                         value: ApplicationBehavior.asServer,
                         groupValue: _behavior,
-                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.asServer),
+                        onChanged: _trying ? null : (_) => mountedSetState(() => _behavior = ApplicationBehavior.asServer),
                       ),
-                      Text('作为服务器'),
+                      Text(
+                        '作为服务器',
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                      ),
                       SizedBox(width: 16),
                     ],
                   ),
@@ -141,9 +174,12 @@ class _InitPageState extends State<InitPage> {
                       Radio<ApplicationBehavior>(
                         value: ApplicationBehavior.asClient,
                         groupValue: _behavior,
-                        onChanged: (_) => mountedSetState(() => _behavior = ApplicationBehavior.asClient),
+                        onChanged: _trying ? null : (_) => mountedSetState(() => _behavior = ApplicationBehavior.asClient),
                       ),
-                      Text('作为客户端'),
+                      Text(
+                        '作为客户端',
+                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                      ),
                       SizedBox(width: 16),
                     ],
                   ),
@@ -186,20 +222,27 @@ class _InitPageState extends State<InitPage> {
                           labelText: '监听地址',
                           icon: Icon(Icons.public),
                         ),
+                        enableSuggestions: true,
                         style: TextStyle(color: Theme.of(context).hintColor),
                       ),
                       SizedBox(height: 4),
-                      TextFormField(
-                        controller: _servePortController,
-                        enabled: !_trying,
-                        keyboardType: TextInputType.number,
-                        validator: _portValidator,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '监听端口',
-                          icon: Icon(Icons.grid_3x3),
+                      SuggestionTextFormField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: _servePortController,
+                          enabled: !_trying,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 6),
+                            labelText: '监听端口',
+                            icon: Icon(Icons.grid_3x3),
+                          ),
+                          style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                         ),
-                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        validator: _portValidator,
+                        suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
+                        suggestionsBoxDecoration: suggestionsBoxDecoration,
+                        onSuggestionSelected: (suggestion) => _servePortController.text = suggestion,
+                        suggestionsCallback: (pattern) => _history?.getServedPorts() ?? [],
                       ),
                     ],
                   ),
@@ -214,40 +257,58 @@ class _InitPageState extends State<InitPage> {
                   padding: EdgeInsets.only(left: 8, right: 8, top: 4),
                   child: Column(
                     children: [
-                      TextFormField(
-                        controller: _targetAddrController,
-                        enabled: !_trying,
+                      SuggestionTextFormField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: _targetAddrController,
+                          enabled: !_trying,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 6),
+                            labelText: '目的地址',
+                            icon: Icon(Icons.public),
+                          ),
+                          style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        ),
                         validator: _ipValidator,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '目的地址',
-                          icon: Icon(Icons.public),
-                        ),
-                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
+                        suggestionsBoxDecoration: suggestionsBoxDecoration,
+                        onSuggestionSelected: (suggestion) => _targetAddrController.text = suggestion,
+                        suggestionsCallback: (pattern) => _history?.getTargetAddresses() ?? [],
                       ),
                       SizedBox(height: 4),
-                      TextFormField(
-                        controller: _targetPortController,
-                        enabled: !_trying,
-                        keyboardType: TextInputType.number,
+                      SuggestionTextFormField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: _targetPortController,
+                          enabled: !_trying,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 6),
+                            labelText: '目的端口',
+                            icon: Icon(Icons.grid_3x3),
+                          ),
+                          style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        ),
                         validator: _portValidator,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '目的端口',
-                          icon: Icon(Icons.grid_3x3),
-                        ),
-                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
+                        suggestionsBoxDecoration: suggestionsBoxDecoration,
+                        onSuggestionSelected: (suggestion) => _targetPortController.text = suggestion,
+                        suggestionsCallback: (pattern) => _history?.getTargetPorts() ?? [],
                       ),
                       SizedBox(height: 4),
-                      TextFormField(
-                        controller: _clientNameController,
-                        enabled: !_trying,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 6),
-                          labelText: '客户端名称 (可空)',
-                          icon: Icon(Icons.contact_page_outlined),
+                      SuggestionTextFormField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: _clientNameController,
+                          enabled: !_trying,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 6),
+                            labelText: '客户端名称 (可空)',
+                            icon: Icon(Icons.contact_page_outlined),
+                          ),
+                          style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
                         ),
-                        style: !_trying ? null : TextStyle(color: Theme.of(context).hintColor),
+                        suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
+                        suggestionsBoxDecoration: suggestionsBoxDecoration,
+                        onSuggestionSelected: (suggestion) => _clientNameController.text = suggestion,
+                        suggestionsCallback: (pattern) => _history?.getClientNames() ?? [],
                       ),
                     ],
                   ),

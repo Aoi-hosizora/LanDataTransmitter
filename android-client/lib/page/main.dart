@@ -394,6 +394,7 @@ class _MainPageState extends State<MainPage> {
                   /// message text
                   TextField(
                     controller: _textController,
+                    autofocus: true,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),

@@ -24,3 +24,5 @@
 + [Dart package, channel](https://pub.dev/packages/channel)
 + [Interconnecting emulator instances](https://developer.android.com/studio/run/emulator-networking#connecting)
 + [Set up port forwarding](https://developer.android.com/studio/command-line/adb#forwardports)
++ [Sending files via gRPC](https://ops.tips/blog/sending-files-via-grpc/)
++ [gRPC + Image Upload](https://stackoverflow.com/questions/34969446/grpc-image-upload)

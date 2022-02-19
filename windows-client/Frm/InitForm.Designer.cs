@@ -40,12 +40,12 @@ namespace LanDataTransmitter.Frm {
             this.lblState = new System.Windows.Forms.Label();
             this.grpBehavior = new System.Windows.Forms.GroupBox();
             this.grpClient = new System.Windows.Forms.GroupBox();
-            this.lblClientName = new System.Windows.Forms.Label();
-            this.edtClientName = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
-            this.lblConnectAddress = new System.Windows.Forms.Label();
-            this.edtTargetAddress = new System.Windows.Forms.TextBox();
-            this.lblConnectPort = new System.Windows.Forms.Label();
+            this.lblTargetAddress = new System.Windows.Forms.Label();
+            this.cboTargetAddress = new System.Windows.Forms.ComboBox();
+            this.lblTargetPort = new System.Windows.Forms.Label();
             this.numTargetPort = new System.Windows.Forms.NumericUpDown();
+            this.lblClientName = new System.Windows.Forms.Label();
+            this.cboClientName = new System.Windows.Forms.ComboBox();
             this.grpServer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numServePort)).BeginInit();
             this.grpBehavior.SuspendLayout();
@@ -225,12 +225,12 @@ namespace LanDataTransmitter.Frm {
             // 
             this.grpClient.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.grpClient.Controls.Add(this.lblConnectAddress);
-            this.grpClient.Controls.Add(this.edtTargetAddress);
-            this.grpClient.Controls.Add(this.lblConnectPort);
+            this.grpClient.Controls.Add(this.lblTargetAddress);
+            this.grpClient.Controls.Add(this.cboTargetAddress);
+            this.grpClient.Controls.Add(this.lblTargetPort);
             this.grpClient.Controls.Add(this.numTargetPort);
             this.grpClient.Controls.Add(this.lblClientName);
-            this.grpClient.Controls.Add(this.edtClientName);
+            this.grpClient.Controls.Add(this.cboClientName);
             this.grpClient.Location = new System.Drawing.Point(12, 194);
             this.grpClient.Name = "grpClient";
             this.grpClient.Size = new System.Drawing.Size(280, 112);
@@ -238,52 +238,34 @@ namespace LanDataTransmitter.Frm {
             this.grpClient.TabStop = false;
             this.grpClient.Text = "客户端配置";
             // 
-            // lblClientName
+            // lblTargetAddress
             // 
-            this.lblClientName.AutoSize = true;
-            this.lblClientName.Location = new System.Drawing.Point(6, 83);
-            this.lblClientName.Name = "lblClientName";
-            this.lblClientName.Size = new System.Drawing.Size(39, 17);
-            this.lblClientName.TabIndex = 16;
-            this.lblClientName.Text = "名称 :";
+            this.lblTargetAddress.AutoSize = true;
+            this.lblTargetAddress.Location = new System.Drawing.Point(6, 25);
+            this.lblTargetAddress.Name = "lblTargetAddress";
+            this.lblTargetAddress.Size = new System.Drawing.Size(63, 17);
+            this.lblTargetAddress.TabIndex = 12;
+            this.lblTargetAddress.Text = "目的地址 :";
             // 
-            // edtClientName
+            // cboTargetAddress
             // 
-            this.edtClientName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.edtClientName.Location = new System.Drawing.Point(51, 80);
-            this.edtClientName.Name = "edtClientName";
-            this.edtClientName.PlaceholderText = "此处输入客户端名称 (可空)...";
-            this.edtClientName.Size = new System.Drawing.Size(223, 23);
-            this.edtClientName.TabIndex = 13;
+            this.cboTargetAddress.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cboTargetAddress.FormattingEnabled = true;
+            this.cboTargetAddress.ItemHeight = 17;
+            this.cboTargetAddress.Location = new System.Drawing.Point(75, 22);
+            this.cboTargetAddress.Name = "cboTargetAddress";
+            this.cboTargetAddress.Size = new System.Drawing.Size(199, 23);
+            this.cboTargetAddress.TabIndex = 13;
+            this.cboTargetAddress.Text = "127.0.0.1";
             // 
-            // lblConnectAddress
+            // lblTargetPort
             // 
-            this.lblConnectAddress.AutoSize = true;
-            this.lblConnectAddress.Location = new System.Drawing.Point(6, 25);
-            this.lblConnectAddress.Name = "lblConnectAddress";
-            this.lblConnectAddress.Size = new System.Drawing.Size(63, 17);
-            this.lblConnectAddress.TabIndex = 12;
-            this.lblConnectAddress.Text = "目的地址 :";
-            // 
-            // edtTargetAddress
-            // 
-            this.edtTargetAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.edtTargetAddress.Location = new System.Drawing.Point(75, 22);
-            this.edtTargetAddress.Name = "edtTargetAddress";
-            this.edtTargetAddress.Size = new System.Drawing.Size(199, 23);
-            this.edtTargetAddress.TabIndex = 13;
-            this.edtTargetAddress.Text = "127.0.0.1";
-            // 
-            // lblConnectPort
-            // 
-            this.lblConnectPort.AutoSize = true;
-            this.lblConnectPort.Location = new System.Drawing.Point(6, 54);
-            this.lblConnectPort.Name = "lblConnectPort";
-            this.lblConnectPort.Size = new System.Drawing.Size(63, 17);
-            this.lblConnectPort.TabIndex = 14;
-            this.lblConnectPort.Text = "目的端口 :";
+            this.lblTargetPort.AutoSize = true;
+            this.lblTargetPort.Location = new System.Drawing.Point(6, 54);
+            this.lblTargetPort.Name = "lblTargetPort";
+            this.lblTargetPort.Size = new System.Drawing.Size(63, 17);
+            this.lblTargetPort.TabIndex = 14;
+            this.lblTargetPort.Text = "目的端口 :";
             // 
             // numTargetPort
             // 
@@ -307,6 +289,27 @@ namespace LanDataTransmitter.Frm {
             0,
             0,
             0});
+            // 
+            // lblClientName
+            // 
+            this.lblClientName.AutoSize = true;
+            this.lblClientName.Location = new System.Drawing.Point(6, 83);
+            this.lblClientName.Name = "lblClientName";
+            this.lblClientName.Size = new System.Drawing.Size(75, 17);
+            this.lblClientName.TabIndex = 16;
+            this.lblClientName.Text = "名称 (可选) :";
+            // 
+            // cboClientName
+            // 
+            this.cboClientName.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.cboClientName.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cboClientName.FormattingEnabled = true;
+            this.cboClientName.IntegralHeight = false;
+            this.cboClientName.ItemHeight = 17;
+            this.cboClientName.Location = new System.Drawing.Point(87, 80);
+            this.cboClientName.Name = "cboClientName";
+            this.cboClientName.Size = new System.Drawing.Size(187, 23);
+            this.cboClientName.TabIndex = 17;
             // 
             // InitForm
             // 
@@ -359,10 +362,10 @@ namespace LanDataTransmitter.Frm {
         private System.Windows.Forms.Label lblServeInterface;
         private System.Windows.Forms.GroupBox grpClient;
         private System.Windows.Forms.Label lblClientName;
-        private System.Windows.Forms.Label lblConnectAddress;
-        private System.Windows.Forms.TextBox edtTargetAddress;
-        private System.Windows.Forms.Label lblConnectPort;
+        private System.Windows.Forms.Label lblTargetAddress;
+        private System.Windows.Forms.Label lblTargetPort;
         private System.Windows.Forms.NumericUpDown numTargetPort;
-        private LanDataTransmitter.Frm.View.PlaceholderTextBox edtClientName;
+        private System.Windows.Forms.ComboBox cboClientName;
+        private System.Windows.Forms.ComboBox cboTargetAddress;
     }
 }

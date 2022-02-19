@@ -19,7 +19,7 @@ class GrpcClientService {
         credentials: ChannelCredentials.insecure(),
         codecRegistry: CodecRegistry(codecs: [GzipCodec(), IdentityCodec()]),
       ),
-    );
+    ); // => 10.0.3.2
     var client = TransmitterClient(channel); // <- not connect yet
     return util.Tuple(channel, client);
   }
