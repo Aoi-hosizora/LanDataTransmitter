@@ -145,6 +145,7 @@ namespace LanDataTransmitter.Frm.View {
                 obj.InfoLine = $"server ({time})";
                 obj.IsReceived = r.IsStC;
             }
+
             var (line1, line2) = (obj.InfoLine, r.Text);
             line1 = obj.IsReceived ? "→ " + line1 : line1 + " ←";
             line2 = line2.Replace("\r\n", NewLineSymbol).Replace("\n", NewLineSymbol);

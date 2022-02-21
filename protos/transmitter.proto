@@ -23,6 +23,7 @@ message ConnectRequest {
 message ConnectReply {
     bool accepted = 1;
     string clientId = 2;
+    uint64 connectTimestamp = 3;
 }
 
 // Disconnect
@@ -40,7 +41,7 @@ message DisconnectReply {
 message PushTextRequest {
     string clientId = 1;
     uint64 timestamp = 2;
-    string text = 3;
+    string text = 3; // in CRLF
 }
 
 message PushTextReply {
@@ -89,7 +90,7 @@ message PulledDisconnectReply {
 message PulledTextReply {
     string messageId = 1;
     uint64 timestamp = 2;
-    string text = 3;
+    string text = 3; // in CRLF
 }
 
 // PullFile (C <- S)

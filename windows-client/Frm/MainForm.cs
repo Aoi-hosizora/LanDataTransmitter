@@ -67,10 +67,12 @@ namespace LanDataTransmitter.Frm {
 
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 // vis
+                btnClientInfo.Visible = !notRunning;
                 btnRestart.Visible = notRunning;
                 btnForceDisconnect.Visible = !notRunning;
                 btnStop.Visible = !notRunning;
                 // able
+                btnClientInfo.Enabled = !notRunning && !noClient;
                 btnForceDisconnect.Enabled = !notRunning && !noClient;
                 btnStop.Enabled = !notRunning;
                 cboSendTo.Enabled = !notRunning && !noClient;
@@ -79,10 +81,12 @@ namespace LanDataTransmitter.Frm {
                 btnSendFile.Enabled = !notRunning && !noClient;
             } else {
                 // vis
+                btnClientInfo.Visible = !notRunning;
                 btnRestart.Visible = notRunning;
                 btnForceDisconnect.Visible = false;
                 btnStop.Visible = !notRunning;
                 // able
+                btnClientInfo.Enabled = !notRunning;
                 btnStop.Enabled = !notRunning;
                 btnSendText.Enabled = !notRunning && !emptyText;
                 btnSendFile.Enabled = !notRunning;
@@ -105,7 +109,7 @@ namespace LanDataTransmitter.Frm {
                 } else {
                     lblBehavior.Text = "当前作为客户端，与服务器的连接已断开";
                 }
-                lblClientInfo.Text = $"标识：{Global.Client.Id}" + (Global.Client.Name == "" ? "" : $"，名称：{Global.Client.Name}");
+                lblClientInfo.Text = $"标识：{Global.Client.Obj.Id}" + (Global.Client.Obj.Name == "" ? "" : $"，名称：{Global.Client.Obj.Name}");
                 lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.StCCount} 条消息，已发送 {Global.Messages.CtSCount} 条消息)";
             }
         }
@@ -175,9 +179,13 @@ namespace LanDataTransmitter.Frm {
                     UpdateButtonsState();
                     UpdateLabelsState();
                     if (err != null) {
-                        this.ShowError("客户端获取消息失败", $"无法接受来自服务器的推送。\n原因：{err.Message}");
+                        this.ShowError("获取消息失败", $"当前客户端无法接受来自服务器的推送。\n原因：{err.Message}");
                     } else {
-                        this.ShowInfo("客户端连接已断开", "服务器主动断开与当前客户端的连接。");
+                        var ok = this.ShowQuestion("连接已断开", "服务器主动断开与当前客户端的连接，是否也退出 LanDataTransmitter？", false);
+                        if (ok) {
+                            _stopPassively = true;
+                            Close();
+                        }
                     }
                 });
             });
@@ -219,7 +227,7 @@ namespace LanDataTransmitter.Frm {
 
         private async void btnForceDisconnect_Click(object sender, EventArgs e) {
             btnForceDisconnect.Enabled = false;
-            var ok = this.ShowQuestion("操作确认", "是否断开所有客户端的连接？");
+            var ok = this.ShowQuestion("断开连接确认", "是否断开所有客户端的连接？");
             if (!ok) {
                 btnForceDisconnect.Enabled = true;
                 return;
@@ -242,6 +250,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private bool _restarting;
+        private bool _stopPassively;
 
         private void btnRestart_Click(object sender, EventArgs e) {
             if (Global.State != ApplicationState.Stopped) {
@@ -253,7 +262,7 @@ namespace LanDataTransmitter.Frm {
         }
 
         private async void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-            if (_restarting) {
+            if (_restarting || _stopPassively) {
                 return;
             }
             if (Global.State == ApplicationState.Running) {
@@ -263,7 +272,7 @@ namespace LanDataTransmitter.Frm {
                 }
             } else {
                 e.Cancel = true;
-                var ok = this.ShowQuestion("关闭确认", "是否关闭 LanDataTransmitter？");
+                var ok = this.ShowQuestion("退出确认", "是否退出 LanDataTransmitter？");
                 if (ok) {
                     e.Cancel = false;
                 }
@@ -272,7 +281,17 @@ namespace LanDataTransmitter.Frm {
 
         #endregion
 
-        #region Append list, Send
+        #region Client info, Append list, Send
+
+        private void btnClientInfo_Click(object sender, EventArgs e) {
+            if (Global.Behavior == ApplicationBehavior.AsServer) {
+                var f = new ClientsInfoForm();
+                f.Show(this);
+            } else {
+                var f = new ClientInfoForm();
+                f.Show(this);
+            }
+        }
 
         private void AppendRecordToList(MessageRecord r) {
             lsvRecord.AppendItem(r);
@@ -297,8 +316,9 @@ namespace LanDataTransmitter.Frm {
                         var r = await Global.Server.Service.SendText(id, text, now);
                         Global.Messages.AddStCMessage(r); // <<<
                         this.InvokeAction(() => {
-                            edtText.Text = "";
                             AppendRecordToList(r);
+                            edtText.Text = "";
+                            lsvRecord.Focus();
                             UpdateLabelsState();
                         });
                     } catch (Exception ex) {
@@ -311,8 +331,9 @@ namespace LanDataTransmitter.Frm {
                         var r = await Global.Client.Service.SendText(text, now);
                         Global.Messages.AddCtSMessage(r); // <<<
                         this.InvokeAction(() => {
-                            edtText.Text = "";
                             AppendRecordToList(r);
+                            edtText.Text = "";
+                            lsvRecord.Focus();
                             UpdateLabelsState();
                         });
                     } catch (Exception ex) {
@@ -328,7 +349,7 @@ namespace LanDataTransmitter.Frm {
 
         #endregion
 
-        #region Menus
+        #region Menu events
 
         private void tsmTextDetail_Click(object sender, EventArgs e) {
             if (lsvRecord.SelectedItems.Count == 0) {

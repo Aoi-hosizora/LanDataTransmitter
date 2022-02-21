@@ -82,9 +82,9 @@ namespace LanDataTransmitter.Service {
             var chan = obj.PullChannel;
             try {
                 // !!!!!!
-                var data = new PulledTextReply { MessageId = messageId, Timestamp = timestamp, Text = text };
+                var data = new PulledTextReply { MessageId = messageId, Timestamp = timestamp, Text = text.UnifyToCrlf() };
                 var reply = new PullReply { Accepted = true, Type = PulledType.Text, Text = data };
-                await chan.SendForward(reply); // goto TransmitterImpl.Pull
+                await chan.SendForward(reply); // C <- S, send // goto TransmitterImpl.Pull
                 var ex = await chan.ReceiveBackward(); // from TransmitterImpl.Pull
                 if (ex != null) {
                     throw ex;
@@ -94,15 +94,15 @@ namespace LanDataTransmitter.Service {
             } catch (Exception ex) {
                 throw new Exception(Utils.CheckGrpcException(ex, true));
             }
-            var record = new MessageRecord(clientId, obj.Name, messageId, timestamp, text); // C <- S
+            var record = new MessageRecord(clientId, obj.Name, messageId, timestamp, text.UnifyToCrlf());
             return record; // 通过返回值通知调用方：消息成功发送至客户端
         }
 
         public void SetupTransmitter(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
             _serverImpl.SetupCallbacks(
-                onConnected: onConnected, // 回调：服务器连接了新客户端
-                onDisconnected: onDisconnected, // 回调：服务器取消连接客户端
-                onReceived: onReceived // 回调：服务器收到了来自客户端的消息
+                onConnected: onConnected,
+                onDisconnected: onDisconnected,
+                onReceived: onReceived // C -> S, recv
             );
         }
 
@@ -126,10 +126,11 @@ namespace LanDataTransmitter.Service {
             if (name.Length > 0 && Global.Server.ConnectedClients.Any(kv => kv.Value.Name == name)) {
                 return Task.FromResult(new ConnectReply { Accepted = false }); // conflict
             }
+            var connectTimestamp = Utils.ToTimestamp(DateTime.Now);
             var chan = new BiChannel<PullReply, Exception>();
-            var obj = new ClientObject { Id = clientId, Name = name, ConnectedTime = DateTime.Now, Pulling = false, PullChannel = chan };
+            var obj = new ClientObject(clientId, name, connectTimestamp, false, chan);
             _onConnected?.Invoke(obj);
-            return Task.FromResult(new ConnectReply { Accepted = true, ClientId = clientId });
+            return Task.FromResult(new ConnectReply { Accepted = true, ConnectTimestamp = connectTimestamp, ClientId = clientId });
         }
 
         public override Task<DisconnectReply> Disconnect(DisconnectRequest request, ServerCallContext context) {
@@ -143,19 +144,17 @@ namespace LanDataTransmitter.Service {
         }
 
         public override Task<PushTextReply> PushText(PushTextRequest request, ServerCallContext context) {
-            // C -> S
             var contains = Global.Server.ConnectedClients.TryGetValue(request.ClientId, out var obj);
             if (!contains) {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // not connect yet
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = new MessageRecord(obj.Id, obj.Name, messageId, request.Timestamp, request.Text); // C -> S
+            var record = new MessageRecord(obj.Id, obj.Name, messageId, request.Timestamp, request.Text.UnifyToCrlf()); // C -> S, recv
             _onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自客户端的消息
             return Task.FromResult(new PushTextReply { Accepted = true, MessageId = messageId });
         }
 
         public override async Task Pull(PullRequest request, IServerStreamWriter<PullReply> responseStream, ServerCallContext context) {
-            // C <- S
             var contains = Global.Server.ConnectedClients.TryGetValue(request.ClientId, out var obj);
             if (!contains || obj.Pulling) {
                 await responseStream.WriteAsync(new PullReply { Accepted = false });
@@ -168,7 +167,8 @@ namespace LanDataTransmitter.Service {
                 // WriteAsync: Only one write can be pending at a time
                 try {
                     var reply = await chan.ReceiveForward(); // from GrpcServerService.SendText
-                    await responseStream.WriteAsync(reply); // TODO error???
+                    // TODO error???
+                    await responseStream.WriteAsync(reply); // C <- S, send 
                     await chan.SendBackward(null /* ex */); // goto GrpcServerService.SendText
                 } catch (ChannelClosedException) {
                     // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接

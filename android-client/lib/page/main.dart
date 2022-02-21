@@ -89,9 +89,9 @@ class _MainPageState extends State<MainPage> {
       Global.state = ApplicationState.stopped;
       if (mounted) setState(() {});
       if (err != null) {
-        showInfo(title: '客户端获取消息失败', message: '无法接受来自服务器的推送。\n原因：${err.message()}');
+        showInfo(title: '获取消息失败', message: '当前客户端无法接受来自服务器的推送。\n原因：${err.message()}');
       } else {
-        showInfo(title: '客户端连接已断开', message: '服务器主动断开与当前客户端的连接。');
+        showInfo(title: '连接已断开', message: '服务器主动断开与当前客户端的连接。');
       }
     });
   }
@@ -140,7 +140,7 @@ class _MainPageState extends State<MainPage> {
     _forceDisconnecting = true;
     if (mounted) setState(() {});
     var ok = await showQuestion(
-      title: '操作确认',
+      title: '断开连接确认',
       message: '是否断开所有客户端的连接？',
       trueText: '断开',
       falseText: '取消',
@@ -276,8 +276,8 @@ class _MainPageState extends State<MainPage> {
                           SizedBox(height: 3),
                           if (Global.state == ApplicationState.running) Text('  当前作为客户端，已连接到 ${Global.client!.service.address}:${Global.client!.service.port}'),
                           if (Global.state != ApplicationState.running) Text('  当前作为客户端，与服务器的连接已断开'),
-                          if (Global.client!.name.isEmpty) Text('  标识：${Global.client!.id}'),
-                          if (Global.client!.name.isNotEmpty) Text('  标识：${Global.client!.id}，名称：${Global.client!.name}'),
+                          if (Global.client!.obj.name.isEmpty) Text('  标识：${Global.client!.obj.id}'),
+                          if (Global.client!.obj.name.isNotEmpty) Text('  标识：${Global.client!.obj.id}，名称：${Global.client!.obj.name}'),
                         ],
                       ),
                     ),

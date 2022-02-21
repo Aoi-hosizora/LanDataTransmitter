@@ -6,24 +6,24 @@ import 'package:lan_data_transmitter/util/util.dart' as util;
 class ClientObject {
   String id;
   String name;
-  DateTime connectedTime;
+  Int64 connectedTimestamp;
   bool pulling;
-  BiChannel<PullReply, Exception> pullChannel;
+  BiChannel<PullReply, Exception>? pullChannel;
 
   String get fullDisplayName => name == '' ? id : '$id ($name)';
-
-  ClientObject({
-    required this.id,
-    required this.name,
-    required this.connectedTime,
-    required this.pulling,
-    required this.pullChannel,
-  });
 
   static util.Tuple<String, String> extractIdAndName(String s) {
     var sp = s.split(' ');
     return util.Tuple(sp.isEmpty ? '' : sp[0], sp.length <= 1 ? '' : sp[1]);
   }
+
+  ClientObject({
+    required this.id,
+    required this.name,
+    required this.connectedTimestamp,
+    this.pulling = false,
+    this.pullChannel,
+  });
 } // class ClientObject
 
 class MessageRecord {

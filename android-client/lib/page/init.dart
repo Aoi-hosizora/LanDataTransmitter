@@ -50,7 +50,9 @@ class _InitPageState extends State<InitPage> {
       _servePortController.text = h.getServedPorts().first;
       _targetAddrController.text = h.getTargetAddresses().first;
       _targetPortController.text = h.getTargetPorts().first;
-      _clientNameController.text = h.getClientNames().first;
+      if (h.getClientNames().isNotEmpty) {
+        _clientNameController.text = h.getClientNames().first;
+      }
       if (mounted) setState(() {});
     });
   }
@@ -102,8 +104,8 @@ class _InitPageState extends State<InitPage> {
         } else {
           var addr = _targetAddrController.text, port = int.tryParse(_targetPortController.text)!, name = _clientNameController.text;
           var service = GrpcClientService(addr, port);
-          var id = await service.connect(name);
-          Global.initializeClient(service, id, name); // => ApplicationState.Running
+          var obj = await service.connect(name);
+          Global.initializeClient(service, obj); // => ApplicationState.Running
           _history?.addClientHistory(addr, port, name);
           await _history?.save();
         }

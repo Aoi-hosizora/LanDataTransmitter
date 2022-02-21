@@ -24,7 +24,7 @@ namespace LanDataTransmitter.Service {
             // load
             Load();
 
-            // validate
+            // validate, set to default value if history is empty
             var changed = false;
             if (_history.ServedPorts == null || _history.ServedPorts.Count == 0) {
                 _history.ServedPorts = new List<int> { 10240 };

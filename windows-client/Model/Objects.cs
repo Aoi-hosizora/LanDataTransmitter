@@ -8,13 +8,21 @@ namespace LanDataTransmitter.Model {
         public string Id { get; set; }
         public string Name { get; set; }
         public string FullDisplayName => Name == "" ? Id : $"{Id} ({Name})";
-        public DateTime ConnectedTime { get; set; }
-        public bool Pulling { get; set; }
-        public BiChannel<PullReply, Exception> PullChannel { get; set; }
+        public ulong ConnectedTimestamp { get; set; }
+        public bool Pulling { get; set; } // ignore when AsClient
+        public BiChannel<PullReply, Exception> PullChannel { get; set; } // ignore when AsClient
 
         public static Tuple<string, string> ExtractIdAndName(string s) {
             var sp = s.Split(' ');
             return new Tuple<string, string>(sp.Length == 0 ? "" : sp[0], sp.Length <= 1 ? "" : sp[1]);
+        }
+
+        public ClientObject(string id, string name, ulong connectTimestamp, bool pulling = false, BiChannel<PullReply, Exception> pullChannel = null) {
+            Id = id;
+            Name = name;
+            ConnectedTimestamp = connectTimestamp;
+            Pulling = pulling;
+            PullChannel = pullChannel;
         }
     } // class ClientObject
 

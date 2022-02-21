@@ -183,6 +183,7 @@ namespace LanDataTransmitter.Frm {
             this.Controls.Add(this.btnOK);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(250, 300);
             this.Name = "MessageDetailForm";
             this.Text = "消息详情";

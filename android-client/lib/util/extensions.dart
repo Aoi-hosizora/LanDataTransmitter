@@ -69,6 +69,18 @@ extension ExceptionExtension on Exception {
   }
 }
 
+extension StringException on String {
+  String unifyToCrlf() {
+    var re = RegExp('(?<!\r)\n');
+    return replaceAll(re, '\r\n');
+  }
+
+  String unifyToLf() {
+    var re = RegExp('(?<=\r)\n');
+    return replaceAll(re, '\n');
+  }
+}
+
 extension ScrollControllerExtension on ScrollController {
   void scrollToBottom() {
     if (hasClients) {

@@ -20,8 +20,7 @@ namespace LanDataTransmitter.Service {
 
         public static class Client {
             public static GrpcClientService Service;
-            public static string Id;
-            public static string Name;
+            public static ClientObject Obj;
         }
 
         public static void InitializeServer(GrpcServerService service) {
@@ -32,13 +31,12 @@ namespace LanDataTransmitter.Service {
             Server.ConnectedClients = new Dictionary<string, ClientObject>();
         }
 
-        public static void InitializeClient(string id, string name, GrpcClientService service) {
+        public static void InitializeClient(GrpcClientService service, ClientObject obj) {
             Behavior = ApplicationBehavior.AsClient;
             State = ApplicationState.Running;
             Messages = new MessageRepository();
             Client.Service = service;
-            Client.Id = id;
-            Client.Name = name;
+            Client.Obj = obj;
         }
     } // static class Global
 }

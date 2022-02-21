@@ -21,14 +21,13 @@ class Global {
       ..connectedClients = {};
   }
 
-  static void initializeClient(GrpcClientService service, String id, String name) {
+  static void initializeClient(GrpcClientService service, ClientObject obj) {
     Global.behavior = ApplicationBehavior.asClient;
     Global.state = ApplicationState.running;
     Global.messages = MessageRepository();
     Global.client = _ClientGlobal()
       ..service = service
-      ..id = id
-      ..name = name;
+      ..obj = obj;
   }
 } // class Global
 
@@ -39,6 +38,5 @@ class _ServerGlobal {
 
 class _ClientGlobal {
   late GrpcClientService service;
-  late String id;
-  late String name;
+  late ClientObject obj;
 } // class ClientGlobal

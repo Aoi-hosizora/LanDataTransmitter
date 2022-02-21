@@ -46,7 +46,7 @@ class GrpcServerService {
     var futures = <Future<void>>[];
     Global.server!.connectedClients.forEach((key, value) {
       futures.add(Future.microtask(() async {
-        var chan = value.pullChannel;
+        var chan = value.pullChannel!;
         try {
           var data = PulledDisconnectReply(disconnect: true);
           var reply = PullReply(accepted: true, type: PulledType.DISCONNECT, disconnect: data);
@@ -68,13 +68,13 @@ class GrpcServerService {
     }
     var messageId = util.generateGlobalId();
     var timestamp = util.toTimestamp(time);
-    var chan = obj.pullChannel;
+    var chan = obj.pullChannel!;
     try {
       // !!!!!!
-      var data = PulledTextReply(messageId: messageId, timestamp: timestamp, text: text);
+      var data = PulledTextReply(messageId: messageId, timestamp: timestamp, text: text.unifyToCrlf());
       var reply = PullReply(accepted: true, type: PulledType.TEXT, text: data);
-      await chan.sendForward(reply); // goto TransmitterImpl.pull
-      var ex = await chan.receiveBackward(); // from TransmitterImpl.pull
+      await chan.sendForward(reply); // C <- S, send // goto TransmitterImpl.pull
+      Exception? ex = await chan.receiveBackward(); // from TransmitterImpl.pull
       if (ex != null) {
         throw ex;
       }
@@ -83,7 +83,7 @@ class GrpcServerService {
     } on Exception catch (ex) {
       throw Exception(util.checkGrpcException(ex, isServer: true));
     }
-    var record = MessageRecord(clientId: clientId, clientName: obj.name, messageId: messageId, timestamp: timestamp, text: text); // C <- S
+    var record = MessageRecord(clientId: clientId, clientName: obj.name, messageId: messageId, timestamp: timestamp, text: text.unifyToLf());
     return record; // 通过返回值通知调用方：消息成功发送至客户端
   }
 
@@ -93,9 +93,9 @@ class GrpcServerService {
     required MessageReceivedCallback onReceived,
   }) {
     _serverImpl!.setupCallbacks(
-      onConnected: onConnected, // 回调：服务器连接了新客户端
-      onDisconnected: onDisconnected, // 回调：服务器取消连接客户端
-      onReceived: onReceived, // 回调：服务器收到了来自客户端的消息
+      onConnected: onConnected,
+      onDisconnected: onDisconnected,
+      onReceived: onReceived, // C -> S, recv
     );
   }
 } // class GrpcServerService
@@ -122,10 +122,11 @@ class TransmitterImpl extends TransmitterServiceBase {
     if (name.isNotEmpty && Global.server!.connectedClients.values.any((v) => v.name == name)) {
       return Future.value(ConnectReply(accepted: false)); // conflict
     }
+    var timestamp = util.toTimestamp(DateTime.now());
     var chan = BiChannel<PullReply, Exception>();
-    var obj = ClientObject(id: clientId, name: name, connectedTime: DateTime.now(), pulling: false, pullChannel: chan);
+    var obj = ClientObject(id: clientId, name: name, connectedTimestamp: timestamp, pulling: false, pullChannel: chan);
     _onConnected?.call(obj);
-    return Future.value(ConnectReply(accepted: true, clientId: clientId));
+    return Future.value(ConnectReply(accepted: true, clientId: clientId, connectTimestamp: timestamp));
   }
 
   @override
@@ -134,40 +135,39 @@ class TransmitterImpl extends TransmitterServiceBase {
     if (obj == null) {
       return Future.value(DisconnectReply(accepted: false)); // not connect yet
     }
-    obj.pullChannel.complete('客户端主动断开连接');
+    obj.pullChannel!.complete('客户端主动断开连接');
     _onDisconnected?.call(obj);
     return Future.value(DisconnectReply(accepted: true));
   }
 
   @override
   Future<PushTextReply> pushText(ServiceCall call, PushTextRequest request) {
-    // C -> S
     var obj = Global.server!.connectedClients[request.clientId];
     if (obj == null) {
       return Future.value(PushTextReply(accepted: false)); // not connect yet
     }
     var messageId = util.generateGlobalId();
-    var record = MessageRecord(clientId: obj.id, clientName: obj.name, messageId: messageId, timestamp: request.timestamp, text: request.text); // C -> S
+    var record = MessageRecord(clientId: obj.id, clientName: obj.name, messageId: messageId, timestamp: request.timestamp, text: request.text.unifyToLf()); // C -> S, recv
     _onReceived?.call(record); // 通过回调通知调用方：成功收到来自客户端的消息
     return Future.value(PushTextReply(accepted: true, messageId: messageId));
   }
 
   @override
   Stream<PullReply> pull(ServiceCall call, PullRequest request) async* {
-    // C <- S
     var obj = Global.server!.connectedClients[request.clientId];
     if (obj == null || obj.pulling) {
       yield PullReply(accepted: false);
       return;
     }
     obj.pulling = true;
-    var chan = obj.pullChannel;
+    var chan = obj.pullChannel!;
     // !!!!!!
     while (true) {
       try {
         var reply = await chan.receiveForward(); // from GrpcServerService.sendText
         if (reply != null) {
-          yield reply; // TODO error???
+          // TODO error???
+          yield reply; // C <- S, send
           await chan.sendBackward(null /* ex */); // goto GrpcServerService.sendText
         }
       } on ChannelClosedException {

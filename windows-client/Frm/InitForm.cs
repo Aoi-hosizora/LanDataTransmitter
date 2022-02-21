@@ -41,17 +41,19 @@ namespace LanDataTransmitter.Frm {
 
             // interface
             var interfaces = Utils.GetNetworkInterfaces();
-            cboServeInterface.Items.AddRange(interfaces.ToArray<object>());
+            cboServeInterface.Items.AddRange(interfaces.ToObjectArray());
             cboServeInterface.SelectedIndex = 0;
 
             // history
             _history = new History();
             numServePort.Value = _history.GetServedPorts().First();
-            cboTargetAddress.Items.AddRange(_history.GetTargetAddresses().Cast<object>().ToArray());
+            cboTargetAddress.Items.AddRange(_history.GetTargetAddresses().ToObjectArray());
             cboTargetAddress.Text = cboTargetAddress.Items[0].ToString();
             numTargetPort.Value = _history.GetTargetPorts().First();
-            cboClientName.Items.AddRange(_history.GetClientNames().Cast<object>().ToArray());
-            cboClientName.Text = cboClientName.Items[0].ToString();
+            cboClientName.Items.AddRange(_history.GetClientNames().ToObjectArray());
+            if (cboClientName.Items.Count > 0) {
+                cboClientName.Text = cboClientName.Items[0].ToString();
+            }
 
             // state
             Global.State = ApplicationState.Preparing;
@@ -88,8 +90,8 @@ namespace LanDataTransmitter.Frm {
                     } else {
                         var (addr, port, name) = (cboTargetAddress.Text.Trim(), (int) numTargetPort.Value, cboClientName.Text.Trim());
                         var service = new GrpcClientService(addr, port);
-                        var id = await service.Connect(name);
-                        Global.InitializeClient(id, name, service); // => ApplicationState.Running
+                        var obj = await service.Connect(name);
+                        Global.InitializeClient(service, obj); // => ApplicationState.Running
                         _history.AddClientHistory(service.Address, service.Port, name);
                         _history.Save();
                     }

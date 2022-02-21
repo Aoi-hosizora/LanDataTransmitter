@@ -23,7 +23,7 @@ namespace LanDataTransmitter.Service {
             return new Tuple<Channel, Transmitter.TransmitterClient>(channel, client);
         }
 
-        public async Task<string> Connect(string name) {
+        public async Task<ClientObject> Connect(string name) {
             if (!Utils.ValidIpv4Address(Address)) {
                 throw new Exception($"IP 地址 \"{Address}\" 格式有误");
             }
@@ -40,14 +40,15 @@ namespace LanDataTransmitter.Service {
             if (!reply.Accepted) {
                 throw new Exception("客户端指定的名称已存在");
             }
-            return reply.ClientId;
+            var obj = new ClientObject(reply.ClientId, name, reply.ConnectTimestamp);
+            return obj;
         }
 
         public async Task Disconnect() {
             var (channel, client) = CreateClient();
             DisconnectReply reply;
             try {
-                var request = new DisconnectRequest { ClientId = Global.Client.Id };
+                var request = new DisconnectRequest { ClientId = Global.Client.Obj.Id };
                 reply = await client.DisconnectAsync(request); // 使服务器更新并删除客户端信息
             } catch (Exception ex) {
                 throw new Exception(Utils.CheckGrpcException(ex, false));
@@ -64,8 +65,8 @@ namespace LanDataTransmitter.Service {
             var timestamp = Utils.ToTimestamp(time);
             PushTextReply reply;
             try {
-                var request = new PushTextRequest { ClientId = Global.Client.Id, Timestamp = timestamp, Text = text };
-                reply = await client.PushTextAsync(request);
+                var request = new PushTextRequest { ClientId = Global.Client.Obj.Id, Timestamp = timestamp, Text = text.UnifyToCrlf() };
+                reply = await client.PushTextAsync(request); // C -> S, send
             } catch (Exception ex) {
                 throw new Exception(Utils.CheckGrpcException(ex, false));
             } finally {
@@ -74,7 +75,7 @@ namespace LanDataTransmitter.Service {
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
-            var record = new MessageRecord(Global.Client.Id, Global.Client.Name, reply.MessageId, timestamp, text); // C -> S
+            var record = new MessageRecord(Global.Client.Obj.Id, Global.Client.Obj.Name, reply.MessageId, timestamp, text.UnifyToCrlf());
             return record; // 通过返回值通知调用方：消息成功发送至服务器
         }
 
@@ -82,7 +83,7 @@ namespace LanDataTransmitter.Service {
             var (channel, client) = CreateClient();
             IAsyncStreamReader<PullReply> stream;
             try {
-                var request = new PullRequest { ClientId = Global.Client.Id };
+                var request = new PullRequest { ClientId = Global.Client.Obj.Id };
                 stream = client.Pull(request).ResponseStream;
             } catch (Exception ex) {
                 throw new Exception(Utils.CheckGrpcException(ex, false));
@@ -98,8 +99,8 @@ namespace LanDataTransmitter.Service {
                         await channel.ShutdownAsync();
                         return false; // 被动断开
                     case PulledType.Text:
-                        var pulled = reply.Text;
-                        var record = new MessageRecord(Global.Client.Id, Global.Client.Name, pulled.MessageId, pulled.Timestamp, pulled.Text); // C <- S
+                        var pulled = reply.Text; // C <- S, recv
+                        var record = new MessageRecord(Global.Client.Obj.Id, Global.Client.Obj.Name, pulled.MessageId, pulled.Timestamp, pulled.Text.UnifyToCrlf());
                         onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自服务器的消息
                         break;
                 }

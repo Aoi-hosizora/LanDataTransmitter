@@ -23,7 +23,7 @@ class History {
     // load
     await h._load();
 
-    // validate
+    // validate, set to default value if history is empty
     var changed = false;
     if (h._history.servedPorts.isEmpty) {
       h._history.servedPorts = [10240];

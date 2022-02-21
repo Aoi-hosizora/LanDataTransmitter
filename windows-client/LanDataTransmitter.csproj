@@ -138,6 +138,18 @@
   </ItemGroup>
   <!-- ItemGroup: Compile & Resource !!! -->
   <ItemGroup>
+    <Compile Include="Frm\ClientInfoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\ClientInfoForm.Designer.cs">
+      <DependentUpon>ClientInfoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm\ClientsInfoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\ClientsInfoForm.Designer.cs">
+      <DependentUpon>ClientsInfoForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm\InitForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -173,6 +185,12 @@
     <Compile Include="Util\BiChannel.cs" />
     <Compile Include="Util\Extensions.cs" />
     <Compile Include="Util\Utils.cs" />
+    <EmbeddedResource Include="Frm\ClientInfoForm.resx">
+      <DependentUpon>ClientInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm\ClientsInfoForm.resx">
+      <DependentUpon>ClientsInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Frm\InitForm.resx">
       <DependentUpon>InitForm.cs</DependentUpon>
     </EmbeddedResource>
