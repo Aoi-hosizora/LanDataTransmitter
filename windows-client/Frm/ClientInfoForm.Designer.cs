@@ -145,6 +145,7 @@ namespace LanDataTransmitter.Frm {
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.Name = "ClientInfoForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "客户端信息";
             this.Load += new System.EventHandler(this.ClientInfoForm_Load);
             this.ResumeLayout(false);

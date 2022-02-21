@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 extension PageExtension<T extends StatefulWidget> on State<T> {
   void mountedSetState(VoidCallback f) {
@@ -8,8 +9,8 @@ extension PageExtension<T extends StatefulWidget> on State<T> {
     if (mounted) setState(f);
   }
 
-  void showInfo({required String title, required String message}) {
-    showDialog(
+  Future<void> showInfo({required String title, required String message}) {
+    return showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text(title),
@@ -66,6 +67,13 @@ extension ExceptionExtension on Exception {
       m = m.substring(prefixLength);
     }
     return m;
+  }
+}
+
+extension DateTimeException on DateTime {
+  String format([String? newPattern, String? locale]) {
+    var fmt = DateFormat(newPattern, locale);
+    return fmt.format(this);
   }
 }
 

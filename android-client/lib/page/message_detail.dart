@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lan_data_transmitter/model/objects.dart';
+import 'package:lan_data_transmitter/page/view/kv_table_view.dart';
 import 'package:lan_data_transmitter/service/global.dart';
+import 'package:lan_data_transmitter/util/extensions.dart';
 import 'package:lan_data_transmitter/util/util.dart' as util;
 
 class MessageDetailPage extends StatefulWidget {
@@ -23,33 +24,42 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
   void initState() {
     super.initState();
     var r = widget.record;
+
+    var client = r.clientFullDisplayName;
+    var server = 'server';
     String sender, receiver;
     if (Global.behavior == ApplicationBehavior.asServer) {
+      server += ' (me)';
+      var connected = Global.server!.connectedClients.containsKey(r.clientId);
+      if (!connected) {
+        client += ' (disconnected)';
+      }
       if (r.isCtS) {
         // received
-        sender = r.clientFullDisplayName;
-        receiver = 'server (me)';
+        sender = client;
+        receiver = server;
       } else {
         // sent
-        sender = 'server (me)';
-        receiver = r.clientFullDisplayName;
+        sender = server;
+        receiver = client;
       }
     } else {
+      client += ' (me)';
       if (r.isStC) {
         // received
-        sender = 'server';
-        receiver = r.clientFullDisplayName + ' (me)';
+        sender = server;
+        receiver = client;
       } else {
         // sent
-        sender = r.clientFullDisplayName + ' (me)';
-        receiver = 'server';
+        sender = client;
+        receiver = server;
       }
     }
     _data = [
       util.Tuple('消息ID', r.messageId),
       util.Tuple('发送方', sender),
       util.Tuple('接收方', receiver),
-      util.Tuple('发送时间', DateFormat('yyyy-MM-dd HH:mm:ss').format(util.fromTimestamp(r.timestamp))),
+      util.Tuple('发送时间', util.fromTimestamp(r.timestamp).format('yyyy-MM-dd HH:mm:ss')),
       util.Tuple('详细内容', r.text),
     ];
   }
@@ -62,43 +72,13 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         centerTitle: true,
       ),
       body: Scrollbar(
-        child: ListView(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          children: [
-            Table(
-              columnWidths: const {
-                0: FractionColumnWidth(0.2),
-              },
-              border: TableBorder(
-                horizontalInside: BorderSide(
-                  width: 1,
-                  color: Colors.grey,
-                  style: BorderStyle.solid,
-                ),
-              ),
-              children: [
-                for (var data in _data)
-                  TableRow(
-                    children: [
-                      TableRowInkWell(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                          child: Text('${data.item1}　'),
-                        ),
-                        onTap: () => util.copyText(data.item2),
-                      ),
-                      TableRowInkWell(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                          child: Text('${data.item2}　'),
-                        ),
-                        onTap: () => util.copyText(data.item2),
-                      ),
-                    ],
-                  ),
-              ],
-            )
-          ],
+          child: KvTableView(
+            data: _data,
+            onTap: (t, _) => util.copyText(t.item2, showToast: true),
+          ),
         ),
       ),
     );

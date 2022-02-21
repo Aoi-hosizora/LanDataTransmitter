@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
 import 'package:lan_data_transmitter/util/extensions.dart';
 import 'package:regexed_validator/regexed_validator.dart';
 import 'package:uuid/uuid.dart';
@@ -67,8 +66,7 @@ DateTime fromTimestamp(Int64 timestamp) {
 String formatTimeForShow(DateTime time) {
   var now = DateTime.now();
   var sameDay = now.year == time.year && now.month == time.month && now.day == time.day;
-  var fmt = DateFormat(sameDay ? 'HH:mm:ss' : 'MM-dd HH:mm:ss');
-  return fmt.format(time);
+  return time.format(sameDay ? 'HH:mm:ss' : 'MM-dd HH:mm:ss');
 }
 
 String checkGrpcException(Exception ex, {required bool isServer}) {

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lan_data_transmitter/page/client_info.dart';
+import 'package:lan_data_transmitter/page/clinets_info.dart';
 import 'package:lan_data_transmitter/page/init.dart';
 import 'package:lan_data_transmitter/page/view/message_record_line.dart';
 import 'package:lan_data_transmitter/service/global.dart';
@@ -191,6 +193,16 @@ class _MainPageState extends State<MainPage> {
     return false;
   }
 
+  void _onClientInfoPressed() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => Global.behavior == ApplicationBehavior.asServer
+            ? ClientsInfoPage() // server (multi clients)
+            : ClientInfoPage(), // client
+      ),
+    );
+  }
+
   Future<void> _onSendTextPressed() async {
     var text = _textController.text.trim();
     var now = DateTime.now();
@@ -285,25 +297,39 @@ class _MainPageState extends State<MainPage> {
 
                   /// state buttons
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (Global.state == ApplicationState.running && Global.behavior == ApplicationBehavior.asServer) ...[
-                        OutlinedButton(
-                          child: Text('断开所有连接'),
-                          onPressed: _forceDisconnecting || Global.server!.connectedClients.isEmpty ? null : () => _onForceDisconnectPressed(),
-                        ),
-                        SizedBox(width: 12),
-                      ],
-                      if (Global.state == ApplicationState.running)
-                        OutlinedButton(
-                          child: Text(Global.behavior == ApplicationBehavior.asServer ? '结束监听' : '断开连接'),
-                          onPressed: _stopping ? null : () => _onStopPressed(),
-                        ),
-                      if (Global.state != ApplicationState.running)
-                        OutlinedButton(
-                          child: Text(Global.behavior == ApplicationBehavior.asServer ? '重新监听' : '重新连接'),
-                          onPressed: () => _onRestartPressed(),
-                        ),
+                      Row(
+                        children: [
+                          if (Global.state != ApplicationState.running) SizedBox(width: 1),
+                          if (Global.state == ApplicationState.running)
+                            OutlinedButton(
+                              child: Text('客户端信息'),
+                              onPressed: Global.behavior == ApplicationBehavior.asServer && Global.server!.connectedClients.isEmpty ? null : () => _onClientInfoPressed(),
+                            ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          if (Global.state == ApplicationState.running && Global.behavior == ApplicationBehavior.asServer) ...[
+                            OutlinedButton(
+                              child: Text('断开所有连接'),
+                              onPressed: _forceDisconnecting || Global.server!.connectedClients.isEmpty ? null : () => _onForceDisconnectPressed(),
+                            ),
+                            SizedBox(width: 12),
+                          ],
+                          if (Global.state == ApplicationState.running)
+                            OutlinedButton(
+                              child: Text(Global.behavior == ApplicationBehavior.asServer ? '结束监听' : '断开连接'),
+                              onPressed: _stopping ? null : () => _onStopPressed(),
+                            ),
+                          if (Global.state != ApplicationState.running)
+                            OutlinedButton(
+                              child: Text(Global.behavior == ApplicationBehavior.asServer ? '重新监听' : '重新连接'),
+                              onPressed: () => _onRestartPressed(),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                   SizedBox(height: 8),
@@ -365,7 +391,7 @@ class _MainPageState extends State<MainPage> {
                             child: DropdownButton<String>(
                               isExpanded: true,
                               value: Global.server!.connectedClients.isEmpty ? '暂无客户端' : _selectedClientId,
-                              onChanged: (newValue) => mountedSetState(() => _selectedClientId = newValue),
+                              onChanged: Global.server!.connectedClients.isEmpty ? null : (newValue) => mountedSetState(() => _selectedClientId = newValue),
                               items: [
                                 if (Global.server!.connectedClients.isEmpty)
                                   DropdownMenuItem<String>(
@@ -379,9 +405,7 @@ class _MainPageState extends State<MainPage> {
                                       v.fullDisplayName,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context).textTheme.bodyText2!.copyWith(
-                                            color: (Global.state == ApplicationState.running && Global.server!.connectedClients.isNotEmpty) ? null : Colors.grey,
-                                          ),
+                                      style: Theme.of(context).textTheme.bodyText2,
                                     ),
                                   )
                               ],
@@ -400,7 +424,7 @@ class _MainPageState extends State<MainPage> {
                       contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                       hintText: '此处输入需要发送的内容...',
                     ),
-                    maxLines: 3,
+                    maxLines: 5,
                     style: Theme.of(context).textTheme.bodyText2,
                   ),
                   SizedBox(height: 4),

@@ -131,7 +131,7 @@ class _InitPageState extends State<InitPage> {
   Widget build(BuildContext context) {
     const suggestionsBoxVerticalOffset = 4.0;
     final suggestionsBoxDecoration = SuggestionsBoxDecoration(
-      offsetX: 36,
+      offsetX: 35,
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width - 70,
       ),
@@ -244,7 +244,8 @@ class _InitPageState extends State<InitPage> {
                         suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
                         suggestionsBoxDecoration: suggestionsBoxDecoration,
                         onSuggestionSelected: (suggestion) => _servePortController.text = suggestion,
-                        suggestionsCallback: (pattern) => _history?.getServedPorts() ?? [],
+                        onSuggestionDeleted: (suggestion) => _history?.removeHistory(servedPort: suggestion),
+                        suggestionsCallback: (pattern) => _history?.getServedPorts().where((s) => s.startsWith(pattern)).toList() ?? [],
                       ),
                     ],
                   ),
@@ -274,7 +275,8 @@ class _InitPageState extends State<InitPage> {
                         suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
                         suggestionsBoxDecoration: suggestionsBoxDecoration,
                         onSuggestionSelected: (suggestion) => _targetAddrController.text = suggestion,
-                        suggestionsCallback: (pattern) => _history?.getTargetAddresses() ?? [],
+                        onSuggestionDeleted: (suggestion) => _history?.removeHistory(targetAddresses: suggestion),
+                        suggestionsCallback: (pattern) => _history?.getTargetAddresses().where((s) => s.startsWith(pattern)).toList() ?? [],
                       ),
                       SizedBox(height: 4),
                       SuggestionTextFormField(
@@ -293,7 +295,8 @@ class _InitPageState extends State<InitPage> {
                         suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
                         suggestionsBoxDecoration: suggestionsBoxDecoration,
                         onSuggestionSelected: (suggestion) => _targetPortController.text = suggestion,
-                        suggestionsCallback: (pattern) => _history?.getTargetPorts() ?? [],
+                        onSuggestionDeleted: (suggestion) => _history?.removeHistory(targetPort: suggestion),
+                        suggestionsCallback: (pattern) => _history?.getTargetPorts().where((s) => s.startsWith(pattern)).toList() ?? [],
                       ),
                       SizedBox(height: 4),
                       SuggestionTextFormField(
@@ -310,7 +313,8 @@ class _InitPageState extends State<InitPage> {
                         suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
                         suggestionsBoxDecoration: suggestionsBoxDecoration,
                         onSuggestionSelected: (suggestion) => _clientNameController.text = suggestion,
-                        suggestionsCallback: (pattern) => _history?.getClientNames() ?? [],
+                        onSuggestionDeleted: (suggestion) => _history?.removeHistory(clientName: suggestion),
+                        suggestionsCallback: (pattern) => _history?.getClientNames().where((s) => s.startsWith(pattern)).toList() ?? [],
                       ),
                     ],
                   ),

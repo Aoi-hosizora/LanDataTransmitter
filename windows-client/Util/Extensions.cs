@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace LanDataTransmitter.Util {
@@ -65,6 +66,12 @@ namespace LanDataTransmitter.Util {
         public static bool ShowQuestion(this Form _, string title, string message, bool defaultYes = true) {
             var ok = MessageBox.Show(message, title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, defaultYes ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2);
             return ok == DialogResult.Yes;
+        }
+
+        public static async Task<Task> Timeout(this Task task, TimeSpan duration) {
+            return await Task.WhenAny(task, Task.Delay(duration)) == task
+                ? task // task complete
+                : Task.CompletedTask; // timeout
         }
     }
 }

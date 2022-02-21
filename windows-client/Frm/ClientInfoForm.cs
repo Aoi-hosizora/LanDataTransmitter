@@ -14,6 +14,7 @@ namespace LanDataTransmitter.Frm {
         private void ClientInfoForm_Load(object sender, EventArgs e) {
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 Close();
+                this.ShowError("错误", "错误操作");
                 return;
             }
             edtClientId.Text = Global.Client.Obj.Id;

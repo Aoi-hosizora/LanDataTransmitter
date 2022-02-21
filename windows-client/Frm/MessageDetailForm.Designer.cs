@@ -186,6 +186,7 @@ namespace LanDataTransmitter.Frm {
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(250, 300);
             this.Name = "MessageDetailForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "消息详情";
             this.Load += new System.EventHandler(this.MessageDetailForm_Load);
             this.ResumeLayout(false);

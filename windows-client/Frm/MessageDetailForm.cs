@@ -22,21 +22,29 @@ namespace LanDataTransmitter.Frm {
             edtTime.Text = Utils.FromTimestamp(_record.Timestamp).ToString("yyyy-MM-dd HH:mm:ss");
             edtContent.Text = _record.Text;
 
+            var client = _record.ClientFullDisplayName;
+            var server = "server";
             if (Global.Behavior == ApplicationBehavior.AsServer) {
+                server += " (me)";
+                var connected = Global.Server.ConnectedClients.ContainsKey(_record.ClientId);
+                if (!connected) {
+                    client += " (disconnected)";
+                }
                 if (_record.IsCtS) { // received
-                    edtSender.Text = _record.ClientFullDisplayName;
-                    edtReceiver.Text = "server (me)";
+                    edtSender.Text = client;
+                    edtReceiver.Text = server;
                 } else { // sent
-                    edtSender.Text = "server (me)";
-                    edtReceiver.Text = _record.ClientFullDisplayName;
+                    edtSender.Text = server;
+                    edtReceiver.Text = client;
                 }
             } else {
+                client += " (me)";
                 if (_record.IsStC) { // received
-                    edtSender.Text = "server";
-                    edtReceiver.Text = _record.ClientFullDisplayName + " (me)";
+                    edtSender.Text = server;
+                    edtReceiver.Text = client;
                 } else { // sent
-                    edtSender.Text = _record.ClientFullDisplayName + " (me)";
-                    edtReceiver.Text = "server";
+                    edtSender.Text = client;
+                    edtReceiver.Text = server;
                 }
             }
         }

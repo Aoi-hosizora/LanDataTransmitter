@@ -36,9 +36,10 @@ class GrpcServerService {
   }
 
   Future<void> shutdown() async {
-    await disconnectAll('服务器已关闭');
-    /* await */
-    _server?.shutdown(); // <- slow
+    // await disconnectAll('服务器已关闭');
+    // await _server?.shutdown(); // <- slow
+    await disconnectAll('服务器已关闭').timeout(Duration(seconds: 5), onTimeout: () {});
+    _server?.shutdown();
   }
 
   Future<void> disconnectAll([String? message]) async {

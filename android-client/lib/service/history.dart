@@ -79,10 +79,33 @@ class History {
     _history.targetAddresses.insert(0, address);
     _history.targetPorts.remove(port);
     _history.targetPorts.insert(0, port);
+    name = name.trim();
     if (name.isNotEmpty) {
       _history.clientNames.remove(name);
       _history.clientNames.insert(0, name);
     }
+  }
+
+  void removeHistory({String? servedPort, String? targetAddresses, String? targetPort, String? clientName}) {
+    if (servedPort != null) {
+      var s = int.tryParse(servedPort);
+      if (s != null) {
+        _history.servedPorts.remove(s);
+      }
+    }
+    if (targetAddresses != null) {
+      _history.targetAddresses.remove(targetAddresses);
+    }
+    if (targetPort != null) {
+      var s = int.tryParse(targetPort);
+      if (s != null) {
+        _history.targetPorts.remove(s);
+      }
+    }
+    if (clientName != null) {
+      _history.clientNames.remove(clientName);
+    }
+    save();
   }
 
   List<String> getServedPorts() {

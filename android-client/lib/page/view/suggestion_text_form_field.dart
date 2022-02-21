@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:lan_data_transmitter/util/extensions.dart';
 
 class SuggestionTextFormField extends StatefulWidget {
   final TextFieldConfiguration textFieldConfiguration;
@@ -9,6 +10,7 @@ class SuggestionTextFormField extends StatefulWidget {
   final double suggestionsBoxVerticalOffset;
   final SuggestionsBoxDecoration suggestionsBoxDecoration;
   final Function(String suggestion) onSuggestionSelected;
+  final Function(String suggestion) onSuggestionDeleted;
   final FutureOr<List<String>> Function(String pattern) suggestionsCallback;
 
   const SuggestionTextFormField({
@@ -18,6 +20,7 @@ class SuggestionTextFormField extends StatefulWidget {
     this.suggestionsBoxVerticalOffset = 5.0,
     this.suggestionsBoxDecoration = const SuggestionsBoxDecoration(),
     required this.onSuggestionSelected,
+    required this.onSuggestionDeleted,
     required this.suggestionsCallback,
   }) : super(key: key);
 
@@ -57,6 +60,17 @@ class _SuggestionTextFormFieldState extends State<SuggestionTextFormField> {
         onTap: () {
           _suggestionController.close();
           widget.onSuggestionSelected(item);
+        },
+        onLongPress: () async {
+          var ok = await showQuestion(
+            title: '删除确认',
+            message: '是否删除历史记录 "$item"',
+            trueText: '删除',
+            falseText: '取消',
+          );
+          if (ok) {
+            widget.onSuggestionDeleted(item);
+          }
         },
       ),
     );

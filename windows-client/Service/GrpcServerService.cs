@@ -45,11 +45,12 @@ namespace LanDataTransmitter.Service {
         }
 
         public async Task Shutdown() {
-            await DisconnectAll("服务器已关闭");
+            // await DisconnectAll("服务器已关闭");
             // if (_server != null) {
-            //     await _server.ShutdownAsync();
+            //     await _server.ShutdownAsync(); // <- slow
             // }
-            _server?.ShutdownAsync(); // <- slow
+            var _ = await DisconnectAll("服务器已关闭").Timeout(TimeSpan.FromSeconds(5));
+            _server?.ShutdownAsync();
         }
 
         public async Task DisconnectAll(string message = null) {
