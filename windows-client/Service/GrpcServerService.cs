@@ -40,37 +40,37 @@ namespace LanDataTransmitter.Service {
             } catch (Exception ex) {
                 _serverImpl = null;
                 _server = null;
-                throw new Exception($"指定的监听端口被占用，详细原因：{ex.Message}");
+                throw new Exception($"指定的监听端口被占用 ({ex.Message})");
             }
         }
 
         public async Task Shutdown() {
-            // await DisconnectAll("服务器已关闭");
-            // if (_server != null) {
-            //     await _server.ShutdownAsync(); // <- slow
-            // }
-            var _ = await DisconnectAll("服务器已关闭").Timeout(TimeSpan.FromSeconds(5));
-            _server?.ShutdownAsync();
+            await DisconnectAll("服务器已关闭");
+            if (_server != null) {
+                await _server.ShutdownAsync().WithTimeout(TimeSpan.FromSeconds(2)); // shutdown may be slow
+            }
         }
 
         public async Task DisconnectAll(string message = null) {
             message ??= "服务器要求断开连接";
             var tasks = new List<Task>();
-            Global.Server.ConnectedClients.Values.ToList().ForEach(obj => {
+            Global.Server.ConnectedClients.Values.Where(obj => obj.PullChannel != null).ToList().ForEach(obj => {
                 tasks.Add(Task.Run(async () => {
-                    var chan = obj.PullChannel;
+                    var reply = new PullReply { Accepted = true, Type = PulledType.Disconnect };
                     try {
-                        var data = new PulledDisconnectReply { Disconnect = true };
-                        var reply = new PullReply { Accepted = true, Type = PulledType.Disconnect, Disconnect = data };
-                        await chan.SendForward(reply);
-                        var _ = await chan.ReceiveBackward(); // ignore exception
-                        chan.Complete(message);
+                        await obj.PullChannel.SendForward(reply);
+                        // await obj.PullChannel.ReceiveBackward();
+                        obj.PullChannel.Complete(message);
                     } catch (Exception) {
                         // ignore all exceptions
                     }
                 }));
             });
-            await Task.WhenAll(tasks.ToArray());
+            await Task.WhenAll(tasks.ToArray()).WithTimeout(TimeSpan.FromSeconds(3));
+        }
+
+        public void SetupTransmitter(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
+            _serverImpl.SetupCallbacks(onConnected: onConnected, onDisconnected: onDisconnected, onReceived: onReceived);
         }
 
         public async Task<MessageRecord> SendText(string clientId, string text, DateTime time) {
@@ -78,33 +78,31 @@ namespace LanDataTransmitter.Service {
             if (!ok) {
                 throw new Exception($"服务器暂未连接到客户端 {clientId}");
             }
-            var messageId = Utils.GenerateGlobalId();
-            var timestamp = Utils.ToTimestamp(time);
-            var chan = obj.PullChannel;
-            try {
-                // !!!!!!
-                var data = new PulledTextReply { MessageId = messageId, Timestamp = timestamp, Text = text.UnifyToCrlf() };
-                var reply = new PullReply { Accepted = true, Type = PulledType.Text, Text = data };
-                await chan.SendForward(reply); // C <- S, send // goto TransmitterImpl.Pull
-                var ex = await chan.ReceiveBackward(); // from TransmitterImpl.Pull
-                if (ex != null) {
-                    throw ex;
-                }
-            } catch (ChannelClosedException) {
-                // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
-            } catch (Exception ex) {
-                throw new Exception(Utils.CheckGrpcException(ex, true));
-            }
-            var record = new MessageRecord(clientId, obj.Name, messageId, timestamp, text.UnifyToCrlf());
-            return record; // 通过返回值通知调用方：消息成功发送至客户端
+            var (messageId, timestamp) = (Utils.GenerateGlobalId(), Utils.ToTimestamp(time));
+            var reply = new PullReply {
+                Accepted = true, Type = PulledType.Text,
+                Text = new PulledTextReply(messageId, new TextMessage(timestamp, text.UnifyToCrlf())),
+            };
+            await _serverImpl.SendToClient(obj, reply); // C <- S, send
+            var record = new MessageRecord(clientId, obj.Name, messageId).WithText(
+                new MessageRecord.TextMessage(timestamp, text.UnifyToCrlf()));
+            return record;
         }
 
-        public void SetupTransmitter(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
-            _serverImpl.SetupCallbacks(
-                onConnected: onConnected,
-                onDisconnected: onDisconnected,
-                onReceived: onReceived // C -> S, recv
-            );
+        public async Task<MessageRecord> SendFile(string clientId, string filename, ulong filesize, DateTime time) {
+            var ok = Global.Server.ConnectedClients.TryGetValue(clientId, out var obj);
+            if (!ok) {
+                throw new Exception($"服务器暂未连接到客户端 {clientId}");
+            }
+            var (messageId, timestamp) = (Utils.GenerateGlobalId(), Utils.ToTimestamp(time));
+            var reply = new PullReply {
+                Accepted = true, Type = PulledType.File,
+                File = new PulledFileReply(messageId, new FileMessage(timestamp, filename, filesize, false, null)) // TODO
+            };
+            await _serverImpl.SendToClient(obj, reply); // C <- S, send
+            var record = new MessageRecord(clientId, obj.Name, messageId).WithFile(
+                new MessageRecord.FileMessage(timestamp, filename, filesize)); // TODO
+            return record;
         }
 
     } // class GrpcServerService
@@ -122,16 +120,14 @@ namespace LanDataTransmitter.Service {
         }
 
         public override Task<ConnectReply> Connect(ConnectRequest request, ServerCallContext context) {
-            var clientId = Utils.GenerateGlobalId();
-            var name = request.ClientName; // can be empty
+            var name = request.ClientName; // may be empty
             if (name.Length > 0 && Global.Server.ConnectedClients.Any(kv => kv.Value.Name == name)) {
-                return Task.FromResult(new ConnectReply { Accepted = false }); // conflict
+                return Task.FromResult(new ConnectReply { Accepted = false }); // name conflict
             }
-            var connectTimestamp = Utils.ToTimestamp(DateTime.Now);
-            var chan = new BiChannel<PullReply, Exception>();
-            var obj = new ClientObject(clientId, name, connectTimestamp, false, chan);
+            var clientId = Utils.GenerateGlobalId();
+            var obj = new ClientObject(clientId, name, Utils.ToTimestamp(DateTime.Now));
             _onConnected?.Invoke(obj);
-            return Task.FromResult(new ConnectReply { Accepted = true, ConnectTimestamp = connectTimestamp, ClientId = clientId });
+            return Task.FromResult(new ConnectReply { Accepted = true, ClientId = clientId });
         }
 
         public override Task<DisconnectReply> Disconnect(DisconnectRequest request, ServerCallContext context) {
@@ -139,9 +135,53 @@ namespace LanDataTransmitter.Service {
             if (!contains) {
                 return Task.FromResult(new DisconnectReply { Accepted = false }); // not connect yet
             }
-            obj.PullChannel.Complete("客户端主动断开连接");
+            obj.PullChannel?.Complete("客户端主动断开连接");
             _onDisconnected?.Invoke(obj);
             return Task.FromResult(new DisconnectReply { Accepted = true });
+        }
+
+        public async Task SendToClient(ClientObject clientObject, PullReply reply) {
+            var chan = clientObject.PullChannel;
+            if (chan == null) {
+                return;
+            }
+            Exception ex;
+            try {
+                await chan.SendForward(reply); // #1
+                ex = await chan.ReceiveBackward(); // #4
+            } catch (ChannelClosedException) {
+                // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
+                return; // ignore this kind of exceptions
+            }
+            if (ex != null) {
+                throw new Exception(Utils.FormatGrpcException(ex, true));
+            }
+        }
+
+        public override async Task Pull(PullRequest request, IServerStreamWriter<PullReply> responseStream, ServerCallContext context) {
+            var contains = Global.Server.ConnectedClients.TryGetValue(request.ClientId, out var obj);
+            if (!contains || obj.Pulling) {
+                await responseStream.WriteAsync(new PullReply { Accepted = false }); // reject pulling
+                return;
+            }
+            var chan = new BiChannel<PullReply, Exception>();
+            obj.StartPulling(chan);
+            while (true) {
+                try {
+                    var reply = await chan.ReceiveForward(); // #2
+                    await responseStream.WriteAsync(reply); // C <- S, send
+                    await chan.SendBackward(null /* ex */); // #3
+                } catch (ChannelClosedException) {
+                    // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
+                    return; // also close stream 
+                } catch (Exception ex) {
+                    try { // Exception comes from WriteAsync
+                        await chan.SendBackward(ex);
+                    } catch (ChannelClosedException) {
+                        return;
+                    }
+                }
+            }
         }
 
         public override Task<PushTextReply> PushText(PushTextRequest request, ServerCallContext context) {
@@ -150,38 +190,23 @@ namespace LanDataTransmitter.Service {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // not connect yet
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = new MessageRecord(obj.Id, obj.Name, messageId, request.Timestamp, request.Text.UnifyToCrlf()); // C -> S, recv
-            _onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自客户端的消息
+            var record = new MessageRecord(obj.Id, obj.Name, messageId).WithText(
+                new MessageRecord.TextMessage(request.Text.Timestamp, request.Text.Text.UnifyToCrlf())); // C -> S, recv
+            _onReceived?.Invoke(record);
             return Task.FromResult(new PushTextReply { Accepted = true, MessageId = messageId });
         }
 
-        public override async Task Pull(PullRequest request, IServerStreamWriter<PullReply> responseStream, ServerCallContext context) {
+        public override Task<PushFileReply> PushFile(PushFileRequest request, ServerCallContext context) {
             var contains = Global.Server.ConnectedClients.TryGetValue(request.ClientId, out var obj);
-            if (!contains || obj.Pulling) {
-                await responseStream.WriteAsync(new PullReply { Accepted = false });
-                return;
+            if (!contains) {
+                return Task.FromResult(new PushFileReply { Accepted = false }); // not connect yet
             }
-            obj.Pulling = true;
-            var chan = obj.PullChannel;
-            // !!!!!!
-            while (true) {
-                // WriteAsync: Only one write can be pending at a time
-                try {
-                    var reply = await chan.ReceiveForward(); // from GrpcServerService.SendText
-                    // TODO error???
-                    await responseStream.WriteAsync(reply); // C <- S, send 
-                    await chan.SendBackward(null /* ex */); // goto GrpcServerService.SendText
-                } catch (ChannelClosedException) {
-                    // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
-                    return; // close stream also
-                } catch (Exception ex) {
-                    try {
-                        await chan.SendBackward(ex);
-                    } catch (ChannelClosedException) {
-                        return;
-                    }
-                }
-            }
+            var messageId = Utils.GenerateGlobalId();
+            var record = new MessageRecord(obj.Id, obj.Name, messageId).WithFile(
+                new MessageRecord.FileMessage(request.File.Timestamp, request.File.Filename, request.File.Filesize)); // C -> S, recv
+            // TODO
+            _onReceived?.Invoke(record);
+            return Task.FromResult(new PushFileReply { Accepted = true, MessageId = messageId });
         }
 
     } // class TransmitterImpl

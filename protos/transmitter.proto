@@ -1,17 +1,18 @@
 syntax = "proto3";
 
-package model;
+package lan_data_transmitter.model;
 option csharp_namespace = "LanDataTransmitter.Model";
 
 service Transmitter {
     rpc Connect (ConnectRequest) returns (ConnectReply);
     rpc Disconnect (DisconnectRequest) returns (DisconnectReply);
-    rpc PushText (PushTextRequest) returns (PushTextReply); // C -> S
-    // rpc PushFile (PushFileRequest) returns (PushFileReply); // C -> S
     rpc Pull (PullRequest) returns (stream PullReply); // C <- S
 
-    // rpc PushFileTrunks (stream PushFileTrunksRequest) returns (PushFileTrunksReply); // C -> S
-    // rpc PullFileTrunks (PullFileTrunksRequest) returns (stream PullFileTrunksReply); // C <- S
+    rpc PushText (PushTextRequest) returns (PushTextReply); // C -> S
+    rpc PushFile (PushFileRequest) returns (PushFileReply); // C -> S
+    // rpc PushFileChunks (stream PushFileChunksRequest) returns (PushFileChunksReply); // C -> S
+    // rpc PullFileChunks (PullFileChunksRequest) returns (stream PullFileChunksReply); // C <- S
+    // rpc PushTextEdit (PushTextEditRequest) returns (PushTextEditReply); // C -> S
 }
 
 // Connect
@@ -23,7 +24,6 @@ message ConnectRequest {
 message ConnectReply {
     bool accepted = 1;
     string clientId = 2;
-    uint64 connectTimestamp = 3;
 }
 
 // Disconnect
@@ -36,30 +36,7 @@ message DisconnectReply {
     bool accepted = 1;
 }
 
-// PushText (C -> S)
-
-message PushTextRequest {
-    string clientId = 1;
-    uint64 timestamp = 2;
-    string text = 3; // in CRLF
-}
-
-message PushTextReply {
-    bool accepted = 1;
-    string messageId = 2;
-}
-
-// PushFile (C -> S)
-
-message PushFileRequest { } // TODO
-
-message PushFileReply { } // TODO
-
-message PushFileTrunksRequest { } // TODO
-
-message PushFileTrunksReply{ } // TODO
-
-// Pull (C <- S)
+// Pull
 
 message PullRequest {
     string clientId = 1;
@@ -68,40 +45,112 @@ message PullRequest {
 message PullReply {
     bool accepted = 1;
     PulledType type = 2;
+
     oneof data {
-        PulledDisconnectReply disconnect = 3;
-        PulledTextReply text = 4;
+        PulledTextReply text = 3;
+        PulledFileReply file = 4;
+        // PulledTextEditReply textEdit = 5;
     }
 }
 
 enum PulledType {
     DISCONNECT = 0;
     TEXT = 1;
-
-    // FILE = 2;
+    FILE = 2;
+    // TEXT_EDIT = 3;
 }
 
-message PulledDisconnectReply {
-    bool disconnect = 1; // always true, means server wants to disconnect client
+// Text
+
+message PushTextRequest {
+    string clientId = 1;
+    TextMessage text = 2;
 }
 
-// PullText (C <- S) (oneof)
+message PushTextReply {
+    bool accepted = 1;
+    string messageId = 2;
+}
 
 message PulledTextReply {
     string messageId = 1;
-    uint64 timestamp = 2;
-    string text = 3; // in CRLF
+    TextMessage text = 2;
 }
 
-// PullFile (C <- S)
+message TextMessage {
+    uint64 timestamp = 1;
+    string text = 2; // line separator always use CRLF
+}
+
+// File
+
+message PushFileRequest {
+    string clientId = 1;
+    FileMessage file = 2;
+}
+
+message PushFileReply {
+    bool accepted = 1;
+    string messageId = 2;
+}
 
 message PulledFileReply {
     string messageId = 1;
-    uint64 timestamp = 2;
-    string filename = 3;
-    uint64 filesize = 4;
+    FileMessage file = 3;
 }
 
-message PullFileTrunksRequest { } // TODO
+message FileMessage {
+    uint64 timestamp = 1;
+    string filename = 2;
+    uint64 filesize = 3;
+    bool useChunk = 4;
+    bytes data = 5; // use this field rather than new request when useChunk is false
+}
 
-message PullFileTrunksReply { } // TODO
+/*
+message PushFileChunksRequest {
+    string clientId = 1;
+    string messageId = 2;
+    FileChunk chunk = 3;
+}
+
+message PushFileChunksReply {
+    bool accepted = 1;
+}
+
+message PullFileChunksRequest {
+    string clientId = 1;
+    string messageId = 2;
+}
+
+message PullFileChunksReply {
+    bool accepted = 1;
+    FileChunk chunk = 2;
+}
+
+message FileChunk {
+    uint64 start = 1;
+    uint64 length = 2;
+    bool finish = 3;
+    bytes data = 4;
+}
+*/
+
+// Text Edit
+
+/*
+message PushTextEditRequest {
+    string clientId = 1;
+    string messageId = 2;
+    TextMessage text = 3;
+}
+
+message PushTextEditReply {
+    bool accepted = 1;
+}
+
+message PulledTextEditReply {
+    string messageId = 1;
+    TextMessage text = 2;
+}
+*/

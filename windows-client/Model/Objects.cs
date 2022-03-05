@@ -4,70 +4,132 @@ using LanDataTransmitter.Util;
 
 namespace LanDataTransmitter.Model {
 
+    // ==============
+    // client related
+    // ==============
+
     public class ClientObject {
         public string Id { get; set; }
         public string Name { get; set; }
         public string FullDisplayName => Name == "" ? Id : $"{Id} ({Name})";
         public ulong ConnectedTimestamp { get; set; }
-        public bool Pulling { get; set; } // ignore when AsClient
-        public BiChannel<PullReply, Exception> PullChannel { get; set; } // ignore when AsClient
+        public bool Pulling { get; private set; } // ignore when AsClient
+        public BiChannel<PullReply, Exception> PullChannel { get; private set; } // ignore when AsClient
 
         public static Tuple<string, string> ExtractIdAndName(string s) {
             var sp = s.Split(' ');
             return new Tuple<string, string>(sp.Length == 0 ? "" : sp[0], sp.Length <= 1 ? "" : sp[1]);
         }
 
-        public ClientObject(string id, string name, ulong connectTimestamp, bool pulling = false, BiChannel<PullReply, Exception> pullChannel = null) {
+        public ClientObject(string id, string name, ulong connectTimestamp) {
             Id = id;
             Name = name;
             ConnectedTimestamp = connectTimestamp;
-            Pulling = pulling;
+            Pulling = false;
+            PullChannel = null;
+        }
+
+        public void StartPulling(BiChannel<PullReply, Exception> pullChannel) {
+            Pulling = true;
             PullChannel = pullChannel;
         }
     } // class ClientObject
 
-    public class MessageRecord {
+    // ===============
+    // message related
+    // ===============
+
+    public partial class MessageRecord {
         // client
-        public bool IsCtS { get; set; }
-        public bool IsStC => !IsCtS;
-        public string ClientId { get; set; }
-        public string ClientName { get; set; }
-        public string ClientDisplayName => ClientName == "" ? ClientId : ClientName;
+        public bool IsCts { get; set; }
+        public bool IsStc => !IsCts;
+        public string ClientId { get; }
+        public string ClientName { get; }
+        public string ClientShortDisplayName => ClientName == "" ? ClientId : ClientName;
         public string ClientFullDisplayName => ClientName == "" ? ClientId : $"{ClientId} ({ClientName})";
 
         // message
-        public string MessageId { get; set; }
-        public ulong Timestamp { get; set; }
-        public string Text { get; set; }
+        public string MessageId { get; }
 
-        public MessageRecord(string clientId, string clientName, string messageId, ulong timestamp, string text) {
-            IsCtS = false; // this field will be set when AddCtSMessage or AddStCMessage invoked
+        public MessageRecord(string clientId, string clientName, string messageId) {
+            IsCts = false; // this field will be set when AddCtsMessage or AddStcMessage invoked
             ClientId = clientId;
             ClientName = clientName;
             MessageId = messageId;
-            Timestamp = timestamp;
-            Text = text;
         }
-    } // class MessageRecord
+    } // partial class MessageRecord
 
+    public partial class MessageRecord {
+        // message
+        public enum MessageType { TEXT, FILE }
+        public MessageType Type { get; private set; }
+        public TextMessage Text { get; private set; }
+        public FileMessage File { get; private set; }
+
+        public MessageRecord WithText(TextMessage text) {
+            Type = MessageType.TEXT;
+            Text = text;
+            File = null;
+            return this;
+        }
+
+        public MessageRecord WithFile(FileMessage file) {
+            Type = MessageType.FILE;
+            Text = null;
+            File = file;
+            return this;
+        }
+
+        public class TextMessage {
+            public ulong CreatedTimestamp { get; }
+            // public ulong UpdatedTimestamp { get; private set; }
+            public string Text { get; private set; }
+
+            public TextMessage(ulong timestamp, string text) {
+                CreatedTimestamp = timestamp;
+                Text = text;
+            }
+
+            // public void Update(ulong timestamp, string text) {
+            //     UpdatedTimestamp = timestamp;
+            //     Text = text;
+            // }
+        } // class TextMessage
+
+        public class FileMessage {
+            public ulong CreatedTimestamp { get; }
+            public string Filename { get; }
+            public ulong Filesize { get; }
+            public bool Receiving { get; private set; }
+            public string LocalFilePath { get; private set; }
+
+            public FileMessage(ulong timestamp, string filename, ulong filesize) {
+                CreatedTimestamp = timestamp;
+                Filename = filename;
+                Filesize = filesize;
+                Receiving = false; // TODO
+                LocalFilePath = ""; // TODO
+            }
+        } // class FileMessage
+    } // partial class MessageRecord
 
     public class MessageRepository {
         public List<MessageRecord> Records { get; }
-        public int CtSCount { get; private set; }
-        public int StCCount => (Records?.Count ?? 0) - CtSCount;
+        public int CtsCount { get; private set; }
+        public int StcCount => (Records?.Count ?? 0) - CtsCount;
 
         public MessageRepository() {
             Records = new List<MessageRecord>();
         }
 
-        public void AddCtSMessage(MessageRecord r) {
-            r.IsCtS = true;
+        public void AddCtsMessage(MessageRecord r) {
+            r.IsCts = true;
             Records.Add(r);
-            CtSCount++;
+            CtsCount++;
         }
 
-        public void AddStCMessage(MessageRecord r) {
-            r.IsCtS = false;
+        public void AddStcMessage(MessageRecord r) {
+            r.IsCts = false;
             Records.Add(r);
         }
     } // class MessageRepository

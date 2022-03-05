@@ -68,7 +68,7 @@ namespace LanDataTransmitter.Util {
             return ok == DialogResult.Yes;
         }
 
-        public static async Task<Task> Timeout(this Task task, TimeSpan duration) {
+        public static async Task<Task> WithTimeout(this Task task, TimeSpan duration) {
             return await Task.WhenAny(task, Task.Delay(duration)) == task
                 ? task // task complete
                 : Task.CompletedTask; // timeout

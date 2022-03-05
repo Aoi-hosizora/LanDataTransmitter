@@ -136,17 +136,17 @@ namespace LanDataTransmitter.Frm.View {
         private const string NewLineSymbol = "↴";
 
         public void AppendItem(MessageRecord r) {
-            var time = Utils.FormatTimeForShow(Utils.FromTimestamp(r.Timestamp));
+            var time = Utils.FormatTimeForShow(Utils.FromTimestamp(r.Text.CreatedTimestamp));
             var obj = new MessageRecordTag { Record = r };
             if (Global.Behavior == ApplicationBehavior.AsServer) {
-                obj.InfoLine = $"{r.ClientDisplayName} ({time})";
-                obj.IsReceived = r.IsCtS;
+                obj.InfoLine = $"{r.ClientShortDisplayName} ({time})";
+                obj.IsReceived = r.IsCts;
             } else {
                 obj.InfoLine = $"server ({time})";
-                obj.IsReceived = r.IsStC;
+                obj.IsReceived = r.IsStc;
             }
 
-            var (line1, line2) = (obj.InfoLine, r.Text);
+            var (line1, line2) = (obj.InfoLine, r.Text.Text);
             line1 = obj.IsReceived ? "→ " + line1 : line1 + " ←";
             line2 = line2.Replace("\r\n", NewLineSymbol).Replace("\n", NewLineSymbol);
             var lvi = new ListViewItem { Text = line1 + Environment.NewLine + line2, Tag = obj };

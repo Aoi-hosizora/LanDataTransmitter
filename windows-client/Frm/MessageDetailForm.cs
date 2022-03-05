@@ -19,8 +19,8 @@ namespace LanDataTransmitter.Frm {
 
         private void MessageDetailForm_Load(object sender, EventArgs e) {
             edtID.Text = _record.MessageId;
-            edtTime.Text = Utils.FromTimestamp(_record.Timestamp).ToString("yyyy-MM-dd HH:mm:ss");
-            edtContent.Text = _record.Text;
+            edtTime.Text = Utils.FromTimestamp(_record.Text.CreatedTimestamp).ToString("yyyy-MM-dd HH:mm:ss");
+            edtContent.Text = _record.Text.Text;
 
             var client = _record.ClientFullDisplayName;
             var server = "server";
@@ -30,7 +30,7 @@ namespace LanDataTransmitter.Frm {
                 if (!connected) {
                     client += " (disconnected)";
                 }
-                if (_record.IsCtS) { // received
+                if (_record.IsCts) { // received
                     edtSender.Text = client;
                     edtReceiver.Text = server;
                 } else { // sent
@@ -39,7 +39,7 @@ namespace LanDataTransmitter.Frm {
                 }
             } else {
                 client += " (me)";
-                if (_record.IsStC) { // received
+                if (_record.IsStc) { // received
                     edtSender.Text = server;
                     edtReceiver.Text = client;
                 } else { // sent

@@ -17,92 +17,97 @@ namespace LanDataTransmitter.Service {
             Port = port;
         }
 
-        private Tuple<GrpcChannel, Transmitter.TransmitterClient> CreateClient() {
+        private async Task<T> RequestServer<T>(Func<GrpcChannel, Transmitter.TransmitterClient, Task<T>> callback, bool autoShutdown = true) {
             var channel = new GrpcChannel(Address, Port, ChannelCredentials.Insecure);
-            var client = new Transmitter.TransmitterClient(channel); // <- not connect yet
-            return new Tuple<Channel, Transmitter.TransmitterClient>(channel, client);
+            var client = new Transmitter.TransmitterClient(channel); // not connect yet
+            try {
+                return await callback.Invoke(channel, client); // use callback to request server and get reply
+            } catch (Exception ex) {
+                throw new Exception(Utils.FormatGrpcException(ex, false));
+            } finally {
+                if (autoShutdown) {
+                    await channel.ShutdownAsync();
+                }
+            }
         }
+
+        private ClientObject CurrentClient => Global.Client.Obj;
 
         public async Task<ClientObject> Connect(string name) {
             if (!Utils.ValidIpv4Address(Address)) {
                 throw new Exception($"IP 地址 \"{Address}\" 格式有误");
             }
-            var (channel, client) = CreateClient();
-            ConnectReply reply;
-            try {
-                var request = new ConnectRequest { ClientName = name /* may be empty */ };
-                reply = await client.ConnectAsync(request); // 使服务器记录客户端信息
-            } catch (Exception ex) {
-                throw new Exception(Utils.CheckGrpcException(ex, false));
-            } finally {
-                await channel.ShutdownAsync();
-            }
+            var request = new ConnectRequest { ClientName = name /* may be empty */ };
+            var reply = await RequestServer(async (_, client) => await client.ConnectAsync(request));
             if (!reply.Accepted) {
                 throw new Exception("客户端指定的名称已存在");
             }
-            var obj = new ClientObject(reply.ClientId, name, reply.ConnectTimestamp);
-            return obj;
+            return new ClientObject(reply.ClientId, name, Utils.ToTimestamp(DateTime.Now));
         }
 
         public async Task Disconnect() {
-            var (channel, client) = CreateClient();
-            DisconnectReply reply;
-            try {
-                var request = new DisconnectRequest { ClientId = Global.Client.Obj.Id };
-                reply = await client.DisconnectAsync(request); // 使服务器更新并删除客户端信息
-            } catch (Exception ex) {
-                throw new Exception(Utils.CheckGrpcException(ex, false));
-            } finally {
-                await channel.ShutdownAsync();
-            }
+            var request = new DisconnectRequest { ClientId = CurrentClient.Id };
+            var reply = await RequestServer(async (_, client) => await client.DisconnectAsync(request));
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
         }
 
         public async Task<MessageRecord> SendText(string text, DateTime time) {
-            var (channel, client) = CreateClient();
             var timestamp = Utils.ToTimestamp(time);
-            PushTextReply reply;
-            try {
-                var request = new PushTextRequest { ClientId = Global.Client.Obj.Id, Timestamp = timestamp, Text = text.UnifyToCrlf() };
-                reply = await client.PushTextAsync(request); // C -> S, send
-            } catch (Exception ex) {
-                throw new Exception(Utils.CheckGrpcException(ex, false));
-            } finally {
-                await channel.ShutdownAsync();
-            }
+            var request = new PushTextRequest(CurrentClient.Id, new TextMessage(timestamp, text.UnifyToCrlf()));
+            var reply = await RequestServer(async (_, client) => await client.PushTextAsync(request)); // C -> S, send
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
-            var record = new MessageRecord(Global.Client.Obj.Id, Global.Client.Obj.Name, reply.MessageId, timestamp, text.UnifyToCrlf());
-            return record; // 通过返回值通知调用方：消息成功发送至服务器
+            var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithText(
+                new MessageRecord.TextMessage(timestamp, text.UnifyToCrlf()));
+            return record;
+        }
+
+        public async Task<MessageRecord> SendFile(string filename, ulong filesize, DateTime time) {
+            var timestamp = Utils.ToTimestamp(time);
+            var request = new PushFileRequest(CurrentClient.Id, new FileMessage(timestamp, filename, filesize, false, null)); // TODO
+            var reply = await RequestServer(async (_, client) => await client.PushFileAsync(request)); // C -> S, send 
+            if (!reply.Accepted) {
+                throw new Exception("当前客户端未连接到服务器");
+            }
+            var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithFile(
+                new MessageRecord.FileMessage(timestamp, filename, filesize)); // TODO
+            return record;
         }
 
         public async Task<bool> StartPulling(MessageReceivedCallback onReceived) {
-            var (channel, client) = CreateClient();
-            IAsyncStreamReader<PullReply> stream;
-            try {
-                var request = new PullRequest { ClientId = Global.Client.Obj.Id };
-                stream = client.Pull(request).ResponseStream;
-            } catch (Exception ex) {
-                throw new Exception(Utils.CheckGrpcException(ex, false));
-            }
-            // !!!!!!
+            var request = new PullRequest { ClientId = CurrentClient.Id };
+            var (channel, stream) = await RequestServer((ch, client) =>
+                Task.FromResult(new Tuple<GrpcChannel, IAsyncStreamReader<PullReply>>(ch, client.Pull(request).ResponseStream)), false);
             while (await stream.MoveNext()) {
                 var reply = stream.Current;
-                if (!reply.Accepted) {
+                if (!reply.Accepted) { // pulling is rejected
+                    await channel.ShutdownAsync();
                     throw new Exception("当前客户端未连接到服务器，或者当前客户端重复接收消息");
                 }
+                // !!!
                 switch (reply.Type) {
-                    case PulledType.Disconnect:
+                    case PulledType.Disconnect: {
                         await channel.ShutdownAsync();
                         return false; // 被动断开
-                    case PulledType.Text:
+                    }
+                    case PulledType.Text: {
                         var pulled = reply.Text; // C <- S, recv
-                        var record = new MessageRecord(Global.Client.Obj.Id, Global.Client.Obj.Name, pulled.MessageId, pulled.Timestamp, pulled.Text.UnifyToCrlf());
-                        onReceived?.Invoke(record); // 通过回调通知调用方：成功收到来自服务器的消息
+                        var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithText(
+                            new MessageRecord.TextMessage(pulled.Text.Timestamp, pulled.Text.Text.UnifyToCrlf()));
+                        onReceived?.Invoke(record);
                         break;
+                    }
+                    case PulledType.File: {
+                        var pulled = reply.File; // C <- S, recv
+                        var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithFile(
+                            new MessageRecord.FileMessage(pulled.File.Timestamp, pulled.File.Filename, pulled.File.Filesize));
+                        // TODO
+                        onReceived?.Invoke(record);
+                        break;
+                    }
                 }
             }
             await channel.ShutdownAsync();

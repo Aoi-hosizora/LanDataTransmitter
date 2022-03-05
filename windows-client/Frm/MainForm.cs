@@ -102,7 +102,7 @@ namespace LanDataTransmitter.Frm {
                     lblBehavior.Text = "当前作为服务器，服务器的监听已停止";
                     lblClientInfo.Text = "";
                 }
-                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.CtSCount} 条消息，已发送 {Global.Messages.StCCount} 条消息)";
+                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.CtsCount} 条消息，已发送 {Global.Messages.StcCount} 条消息)";
             } else {
                 if (Global.State == ApplicationState.Running) {
                     lblBehavior.Text = $"当前作为客户端，已连接到 {Global.Client.Service.Address}:{Global.Client.Service.Port}";
@@ -110,7 +110,7 @@ namespace LanDataTransmitter.Frm {
                     lblBehavior.Text = "当前作为客户端，与服务器的连接已断开";
                 }
                 lblClientInfo.Text = $"标识：{Global.Client.Obj.Id}" + (Global.Client.Obj.Name == "" ? "" : $"，名称：{Global.Client.Obj.Name}");
-                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.StCCount} 条消息，已发送 {Global.Messages.CtSCount} 条消息)";
+                lblRecord.Text = $"消息收发记录：(共收到 {Global.Messages.StcCount} 条消息，已发送 {Global.Messages.CtsCount} 条消息)";
             }
         }
 
@@ -137,7 +137,7 @@ namespace LanDataTransmitter.Frm {
                     });
                 },
                 onReceived: r => {
-                    Global.Messages.AddCtSMessage(r); // <<<
+                    Global.Messages.AddCtsMessage(r); // <<<
                     this.InvokeAction(() => {
                         AppendRecordToList(r);
                         UpdateLabelsState();
@@ -152,7 +152,7 @@ namespace LanDataTransmitter.Frm {
                 try {
                     var closedByClient = await Global.Client.Service.StartPulling(
                         onReceived: r => {
-                            Global.Messages.AddStCMessage(r); // <<<
+                            Global.Messages.AddStcMessage(r); // <<<
                             this.InvokeAction(() => {
                                 AppendRecordToList(r);
                                 UpdateLabelsState();
@@ -314,7 +314,7 @@ namespace LanDataTransmitter.Frm {
                 await Task.Run(async () => {
                     try {
                         var r = await Global.Server.Service.SendText(id, text, now);
-                        Global.Messages.AddStCMessage(r); // <<<
+                        Global.Messages.AddStcMessage(r); // <<<
                         this.InvokeAction(() => {
                             AppendRecordToList(r);
                             edtText.Text = "";
@@ -329,7 +329,7 @@ namespace LanDataTransmitter.Frm {
                 await Task.Run(async () => {
                     try {
                         var r = await Global.Client.Service.SendText(text, now);
-                        Global.Messages.AddCtSMessage(r); // <<<
+                        Global.Messages.AddCtsMessage(r); // <<<
                         this.InvokeAction(() => {
                             AppendRecordToList(r);
                             edtText.Text = "";
@@ -383,7 +383,7 @@ namespace LanDataTransmitter.Frm {
             }
             var item = lsvRecord.SelectedItems[0];
             if (item.Tag is MessageRecordListView.MessageRecordTag tag) {
-                Clipboard.SetText(tag.Record.Text);
+                Clipboard.SetText(tag.Record.Text.Text);
             }
         }
 

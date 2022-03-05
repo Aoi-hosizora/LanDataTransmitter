@@ -307,6 +307,7 @@ namespace LanDataTransmitter.Frm {
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(400, 400);
             this.Name = "MainForm";
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
             this.Text = "LAN Data Transmitter (Server)";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
