@@ -1,6 +1,7 @@
 # LanDataTransmitter
 
 + Windows (developed by Winforms) and Android (developed by Flutter) clients to transmit data, such as plain text and file, between hosts in the same LAN.
++ Note: I'm busy with az's work these days, so plz wait for bug-fixing, feature-adding and refactoring (2022/04/04).
 
 ### Environment
 
