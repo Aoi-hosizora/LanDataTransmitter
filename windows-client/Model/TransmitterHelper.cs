@@ -42,11 +42,34 @@ namespace LanDataTransmitter.Model {
     }
 
     public partial class FileMessage {
-        public FileMessage(ulong timestamp, string filename, ulong filesize, bool useChunk, ByteString data) {
+        public FileMessage(ulong timestamp, string filename, int filesize, bool direct, ByteString data) {
             Timestamp = timestamp;
             Filename = filename;
-            Filesize = filesize;
-            UseChunk = useChunk;
+            Filesize = (uint) filesize;
+            Direct = direct;
+            Data = data;
+        }
+    }
+
+    public partial class PushFileChunksRequest {
+        public PushFileChunksRequest(string clientId, string messageId, FileChunk chunk) {
+            ClientId = clientId;
+            MessageId = messageId;
+            Chunk = chunk;
+        }
+    }
+
+    public partial class PullFileChunksReply {
+        public PullFileChunksReply(bool accepted, FileChunk chunk) {
+            Accepted = accepted;
+            Chunk = chunk;
+        }
+    }
+
+    public partial class FileChunk {
+        public FileChunk(int start, int length, ByteString data) {
+            Start = (uint) start;
+            Length = (uint) length;
             Data = data;
         }
     }

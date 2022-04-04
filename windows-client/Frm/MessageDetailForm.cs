@@ -30,7 +30,7 @@ namespace LanDataTransmitter.Frm {
                 if (!connected) {
                     client += " (disconnected)";
                 }
-                if (_record.IsCts) { // received
+                if (!_record.FromMe) { // received
                     edtSender.Text = client;
                     edtReceiver.Text = server;
                 } else { // sent
@@ -39,7 +39,7 @@ namespace LanDataTransmitter.Frm {
                 }
             } else {
                 client += " (me)";
-                if (_record.IsStc) { // received
+                if (!_record.FromMe) { // received
                     edtSender.Text = server;
                     edtReceiver.Text = client;
                 } else { // sent

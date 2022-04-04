@@ -140,10 +140,10 @@ namespace LanDataTransmitter.Frm.View {
             var obj = new MessageRecordTag { Record = r };
             if (Global.Behavior == ApplicationBehavior.AsServer) {
                 obj.InfoLine = $"{r.ClientShortDisplayName} ({time})";
-                obj.IsReceived = r.IsCts;
+                obj.IsReceived = !r.FromMe;
             } else {
                 obj.InfoLine = $"server ({time})";
-                obj.IsReceived = r.IsStc;
+                obj.IsReceived = !r.FromMe;
             }
 
             var (line1, line2) = (obj.InfoLine, r.Text.Text);

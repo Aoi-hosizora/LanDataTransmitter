@@ -10,8 +10,8 @@ service Transmitter {
 
     rpc PushText (PushTextRequest) returns (PushTextReply); // C -> S
     rpc PushFile (PushFileRequest) returns (PushFileReply); // C -> S
-    // rpc PushFileChunks (stream PushFileChunksRequest) returns (PushFileChunksReply); // C -> S
-    // rpc PullFileChunks (PullFileChunksRequest) returns (stream PullFileChunksReply); // C <- S
+    rpc PushFileChunks (stream PushFileChunksRequest) returns (PushFileChunksReply); // C -> S
+    rpc PullFileChunks (PullFileChunksRequest) returns (stream PullFileChunksReply); // C <- S
     // rpc PushTextEdit (PushTextEditRequest) returns (PushTextEditReply); // C -> S
 }
 
@@ -47,9 +47,9 @@ message PullReply {
     PulledType type = 2;
 
     oneof data {
-        PulledTextReply text = 3;
-        PulledFileReply file = 4;
-        // PulledTextEditReply textEdit = 5;
+        PulledTextReply pulledText = 3;
+        PulledFileReply pulledFile = 4;
+        // PulledTextEditReply pulledTextEdit = 5;
     }
 }
 
@@ -102,12 +102,11 @@ message PulledFileReply {
 message FileMessage {
     uint64 timestamp = 1;
     string filename = 2;
-    uint64 filesize = 3;
-    bool useChunk = 4;
-    bytes data = 5; // use this field rather than new request when useChunk is false
+    uint32 filesize = 3;
+    bool direct = 4;
+    bytes data = 5; // use this field rather than new request when direct is true
 }
 
-/*
 message PushFileChunksRequest {
     string clientId = 1;
     string messageId = 2;
@@ -129,12 +128,10 @@ message PullFileChunksReply {
 }
 
 message FileChunk {
-    uint64 start = 1;
-    uint64 length = 2;
-    bool finish = 3;
-    bytes data = 4;
+    uint32 start = 1;
+    uint32 length = 2;
+    bytes data = 3;
 }
-*/
 
 // Text Edit
 

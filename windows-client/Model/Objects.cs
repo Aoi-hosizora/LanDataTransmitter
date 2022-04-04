@@ -9,10 +9,10 @@ namespace LanDataTransmitter.Model {
     // ==============
 
     public class ClientObject {
-        public string Id { get; set; }
-        public string Name { get; set; }
+        public string Id { get; }
+        public string Name { get; }
         public string FullDisplayName => Name == "" ? Id : $"{Id} ({Name})";
-        public ulong ConnectedTimestamp { get; set; }
+        public ulong ConnectedTimestamp { get; }
         public bool Pulling { get; private set; } // ignore when AsClient
         public BiChannel<PullReply, Exception> PullChannel { get; private set; } // ignore when AsClient
 
@@ -41,8 +41,7 @@ namespace LanDataTransmitter.Model {
 
     public partial class MessageRecord {
         // client
-        public bool IsCts { get; set; }
-        public bool IsStc => !IsCts;
+        public bool FromMe { get; }
         public string ClientId { get; }
         public string ClientName { get; }
         public string ClientShortDisplayName => ClientName == "" ? ClientId : ClientName;
@@ -51,8 +50,8 @@ namespace LanDataTransmitter.Model {
         // message
         public string MessageId { get; }
 
-        public MessageRecord(string clientId, string clientName, string messageId) {
-            IsCts = false; // this field will be set when AddCtsMessage or AddStcMessage invoked
+        public MessageRecord(bool fromMe, string clientId, string clientName, string messageId) {
+            FromMe = fromMe;
             ClientId = clientId;
             ClientName = clientName;
             MessageId = messageId;
@@ -61,20 +60,20 @@ namespace LanDataTransmitter.Model {
 
     public partial class MessageRecord {
         // message
-        public enum MessageType { TEXT, FILE }
+        public enum MessageType { Text, File }
         public MessageType Type { get; private set; }
         public TextMessage Text { get; private set; }
         public FileMessage File { get; private set; }
 
         public MessageRecord WithText(TextMessage text) {
-            Type = MessageType.TEXT;
+            Type = MessageType.Text;
             Text = text;
             File = null;
             return this;
         }
 
         public MessageRecord WithFile(FileMessage file) {
-            Type = MessageType.FILE;
+            Type = MessageType.File;
             Text = null;
             File = file;
             return this;
@@ -82,6 +81,7 @@ namespace LanDataTransmitter.Model {
 
         public class TextMessage {
             public ulong CreatedTimestamp { get; }
+
             // public ulong UpdatedTimestamp { get; private set; }
             public string Text { get; private set; }
 
@@ -99,38 +99,38 @@ namespace LanDataTransmitter.Model {
         public class FileMessage {
             public ulong CreatedTimestamp { get; }
             public string Filename { get; }
-            public ulong Filesize { get; }
-            public bool Receiving { get; private set; }
-            public string LocalFilePath { get; private set; }
+            public int Filesize { get; }
+            public string Filepath { get; }
+            public bool Processing { get; private set; }
 
-            public FileMessage(ulong timestamp, string filename, ulong filesize) {
+            public FileMessage(ulong timestamp, string filename, int filesize, string filepath, bool processing) {
                 CreatedTimestamp = timestamp;
                 Filename = filename;
                 Filesize = filesize;
-                Receiving = false; // TODO
-                LocalFilePath = ""; // TODO
+                Filepath = filepath;
+                Processing = processing;
+            }
+
+            public void FinishProcessing() {
+                Processing = false;
             }
         } // class FileMessage
     } // partial class MessageRecord
 
     public class MessageRepository {
         public List<MessageRecord> Records { get; }
-        public int CtsCount { get; private set; }
-        public int StcCount => (Records?.Count ?? 0) - CtsCount;
+        public int SentCount { get; private set; }
+        public int ReceivedCount => (Records?.Count ?? 0) - SentCount;
 
         public MessageRepository() {
             Records = new List<MessageRecord>();
         }
 
-        public void AddCtsMessage(MessageRecord r) {
-            r.IsCts = true;
+        public void AddMessage(MessageRecord r) {
             Records.Add(r);
-            CtsCount++;
-        }
-
-        public void AddStcMessage(MessageRecord r) {
-            r.IsCts = false;
-            Records.Add(r);
+            if (r.FromMe) {
+                SentCount++;
+            }
         }
     } // class MessageRepository
 }

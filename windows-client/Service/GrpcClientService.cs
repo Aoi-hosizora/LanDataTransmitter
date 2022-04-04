@@ -1,9 +1,12 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Grpc.Core;
 using GrpcChannel = Grpc.Core.Channel;
 using LanDataTransmitter.Model;
 using LanDataTransmitter.Util;
+using Microsoft.VisualBasic;
 
 namespace LanDataTransmitter.Service {
 
@@ -17,7 +20,7 @@ namespace LanDataTransmitter.Service {
             Port = port;
         }
 
-        private async Task<T> RequestServer<T>(Func<GrpcChannel, Transmitter.TransmitterClient, Task<T>> callback, bool autoShutdown = true) {
+        public async Task<T> RequestServer<T>(Func<GrpcChannel, Transmitter.TransmitterClient, Task<T>> callback, bool autoShutdown = true) {
             var channel = new GrpcChannel(Address, Port, ChannelCredentials.Insecure);
             var client = new Transmitter.TransmitterClient(channel); // not connect yet
             try {
@@ -60,21 +63,72 @@ namespace LanDataTransmitter.Service {
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
-            var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithText(
+            var record = new MessageRecord(true, CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithText(
                 new MessageRecord.TextMessage(timestamp, text.UnifyToCrlf()));
             return record;
         }
+        
+        // https://docs.microsoft.com/en-us/aspnet/core/grpc/client?view=aspnetcore-6.0
 
-        public async Task<MessageRecord> SendFile(string filename, ulong filesize, DateTime time) {
+        public async Task SendFile(string f, DateTime time, Action<MessageRecord, bool, double> callback) {
+            var (fi, err) = Utils.CheckSentFile(f);
+            if (!string.IsNullOrWhiteSpace(err)) {
+                throw new Exception(err);
+            }
+            var (filepath, filename, filesize) = (fi.FullName, fi.Name, (int) fi.Length);
+            var (buf, direct, bs) = (new byte[512 * 1024], filesize <= 512 * 1024, ByteString.Empty);
+            if (direct) { // (0B, 512KB]
+                using var file = fi.OpenRead();
+                bs = await buf.ReadFileToByteString(file, 0);
+            }
             var timestamp = Utils.ToTimestamp(time);
-            var request = new PushFileRequest(CurrentClient.Id, new FileMessage(timestamp, filename, filesize, false, null)); // TODO
-            var reply = await RequestServer(async (_, client) => await client.PushFileAsync(request)); // C -> S, send 
+            var request = new PushFileRequest(CurrentClient.Id, new FileMessage(timestamp, filename, filesize, direct, bs /* not empty if direct */));
+            var reply = await RequestServer(async (_, client) => await client.PushFileAsync(request)); // C -> S, send
             if (!reply.Accepted) {
                 throw new Exception("当前客户端未连接到服务器");
             }
-            var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithFile(
-                new MessageRecord.FileMessage(timestamp, filename, filesize)); // TODO
-            return record;
+            var record = new MessageRecord(true, CurrentClient.Id, CurrentClient.Name, reply.MessageId).WithFile(
+                new MessageRecord.FileMessage(timestamp, filename, filesize, filepath, direct == false));
+            if (direct) {
+                callback(record, true, 1.0);
+            } else {
+                // (512KB, 512MB]
+                callback(record, false, 0.0);
+                var _ = Task.Run(async () => {
+                    var chunksReply = await RequestServer(async (_, client) => {
+                        return await SendChunksToServer(client, fi, buf, record, callback);
+                    });
+                    if (!chunksReply.Accepted) {
+                        // TODO
+                    }
+                });
+            }
+        }
+
+        public static async Task<PushFileChunksReply> SendChunksToServer(
+            Transmitter.TransmitterClient client, FileInfo fi, byte[] buf,
+            MessageRecord record, Action<MessageRecord, bool, double> callback
+        ) {
+            using var call = client.PushFileChunks(); // TODO exception
+            var requestStream = call.RequestStream;
+            using (var file = fi.OpenRead()) {
+                var sentBytes = 0;
+                while (true) {
+                    var bs = await buf.ReadFileToByteString(file, 0);
+                    if (bs.IsEmpty) {
+                        break;
+                    }
+                    var chunkRequest = new PushFileChunksRequest(record.ClientId, record.MessageId, new FileChunk(sentBytes, bs.Length, bs));
+                    await requestStream.WriteAsync(chunkRequest); // TODO exception
+                    sentBytes += bs.Length;
+                    callback(record, false, (double) sentBytes / record.File.Filesize);
+                }
+            }
+            await requestStream.CompleteAsync();
+            var chunksReply = await call.ResponseAsync; // TODO exception
+            record.File.FinishProcessing();
+            callback(record, true, 1.0);
+            return chunksReply;
         }
 
         public async Task<bool> StartPulling(MessageReceivedCallback onReceived) {
@@ -94,18 +148,44 @@ namespace LanDataTransmitter.Service {
                         return false; // 被动断开
                     }
                     case PulledType.Text: {
-                        var pulled = reply.Text; // C <- S, recv
-                        var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithText(
-                            new MessageRecord.TextMessage(pulled.Text.Timestamp, pulled.Text.Text.UnifyToCrlf()));
+                        var (pulled, text) = (reply.PulledText, reply.PulledText.Text); // C <- S, recv
+                        var record = new MessageRecord(false, CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithText(
+                            new MessageRecord.TextMessage(text.Timestamp, text.Text.UnifyToCrlf()));
                         onReceived?.Invoke(record);
                         break;
                     }
                     case PulledType.File: {
-                        var pulled = reply.File; // C <- S, recv
-                        var record = new MessageRecord(CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithFile(
-                            new MessageRecord.FileMessage(pulled.File.Timestamp, pulled.File.Filename, pulled.File.Filesize));
-                        // TODO
-                        onReceived?.Invoke(record);
+                        var (pulled, file) = (reply.PulledFile, reply.PulledFile.File); // C <- S, recv
+                        var filepath = Utils.GenerateFilepath(file.Filename);
+                        var record = new MessageRecord(false, CurrentClient.Id, CurrentClient.Name, pulled.MessageId).WithFile(
+                            new MessageRecord.FileMessage(file.Timestamp, file.Filename, (int) file.Filesize, filepath, file.Direct == false));
+                        if (file.Direct) {
+                            using var f = File.OpenWrite(filepath);
+                            await file.Data.WriteByteStringToFile(f);
+                            onReceived?.Invoke(record);
+                            break;
+                        }
+                        var _ = Task.Run(async () => {
+                            var chunksRequest = new PullFileChunksRequest { ClientId = CurrentClient.Id, MessageId = pulled.MessageId };
+                            var (chunksChannel, chunksStream) = await RequestServer((ch, client) => // TODO
+                                Task.FromResult(new Tuple<GrpcChannel, IAsyncStreamReader<PullFileChunksReply>>(ch, client.PullFileChunks(chunksRequest).ResponseStream)), false);
+                            using var f = File.OpenWrite(filepath);
+                            var accepted = true;
+                            while (await chunksStream.MoveNext()) {
+                                var chunksReply = chunksStream.Current;
+                                if (!chunksReply.Accepted) {
+                                    accepted = false;
+                                    break;
+                                }
+
+                                await chunksReply.Chunk.Data.WriteByteStringToFile(f);
+                            }
+                            if (accepted) {
+                                record.File.FinishProcessing();
+                                onReceived?.Invoke(record);
+                            }
+                            await chunksChannel.ShutdownAsync();
+                        });
                         break;
                     }
                 }

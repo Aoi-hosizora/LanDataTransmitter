@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Grpc.Core;
 using GrpcChannel = Grpc.Core.Channel;
 using LanDataTransmitter.Model;
@@ -47,7 +49,7 @@ namespace LanDataTransmitter.Service {
         public async Task Shutdown() {
             await DisconnectAll("服务器已关闭");
             if (_server != null) {
-                await _server.ShutdownAsync().WithTimeout(TimeSpan.FromSeconds(2)); // shutdown may be slow
+                var _ = await _server.ShutdownAsync().WithTimeout(TimeSpan.FromSeconds(2)); // shutdown may be slow
             }
         }
 
@@ -66,7 +68,7 @@ namespace LanDataTransmitter.Service {
                     }
                 }));
             });
-            await Task.WhenAll(tasks.ToArray()).WithTimeout(TimeSpan.FromSeconds(3));
+            var _ = await Task.WhenAll(tasks.ToArray()).WithTimeout(TimeSpan.FromSeconds(3));
         }
 
         public void SetupTransmitter(ConnectStateChangedCallback onConnected, ConnectStateChangedCallback onDisconnected, MessageReceivedCallback onReceived) {
@@ -84,24 +86,35 @@ namespace LanDataTransmitter.Service {
                 Text = new PulledTextReply(messageId, new TextMessage(timestamp, text.UnifyToCrlf())),
             };
             await _serverImpl.SendToClient(obj, reply); // C <- S, send
-            var record = new MessageRecord(clientId, obj.Name, messageId).WithText(
+            var record = new MessageRecord(true, clientId, obj.Name, messageId).WithText(
                 new MessageRecord.TextMessage(timestamp, text.UnifyToCrlf()));
             return record;
         }
 
-        public async Task<MessageRecord> SendFile(string clientId, string filename, ulong filesize, DateTime time) {
+        public async Task<MessageRecord> SendFile(string clientId, string filepath, DateTime time) {
             var ok = Global.Server.ConnectedClients.TryGetValue(clientId, out var obj);
             if (!ok) {
                 throw new Exception($"服务器暂未连接到客户端 {clientId}");
             }
+            if (!File.Exists(filepath)) {
+                throw new Exception($"文件 \"{filepath}\" 不存在");
+            }
+            var fi = new FileInfo(filepath);
+            var (filename, filesize, direct, bs) = (fi.Name, (ulong) fi.Length, false, ByteString.Empty);
+            if (filesize < 256 * 1024) {
+                direct = true;
+                bs = Utils.ReadFromFileInfo(fi, 0, 256 * 1024);
+            } else {
+                // TODO
+            }
             var (messageId, timestamp) = (Utils.GenerateGlobalId(), Utils.ToTimestamp(time));
             var reply = new PullReply {
                 Accepted = true, Type = PulledType.File,
-                File = new PulledFileReply(messageId, new FileMessage(timestamp, filename, filesize, false, null)) // TODO
+                File = new PulledFileReply(messageId, new FileMessage(timestamp, filename, filesize, direct, bs))
             };
             await _serverImpl.SendToClient(obj, reply); // C <- S, send
-            var record = new MessageRecord(clientId, obj.Name, messageId).WithFile(
-                new MessageRecord.FileMessage(timestamp, filename, filesize)); // TODO
+            var record = new MessageRecord(true, clientId, obj.Name, messageId).WithFile(
+                new MessageRecord.FileMessage(timestamp, filename, filesize, filepath)); // TODO
             return record;
         }
 
@@ -173,7 +186,7 @@ namespace LanDataTransmitter.Service {
                     await chan.SendBackward(null /* ex */); // #3
                 } catch (ChannelClosedException) {
                     // 服务器已关闭 / 服务器要求断开连接 / 客户端主动断开连接
-                    return; // also close stream 
+                    return; // also close stream
                 } catch (Exception ex) {
                     try { // Exception comes from WriteAsync
                         await chan.SendBackward(ex);
@@ -190,7 +203,7 @@ namespace LanDataTransmitter.Service {
                 return Task.FromResult(new PushTextReply { Accepted = false }); // not connect yet
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = new MessageRecord(obj.Id, obj.Name, messageId).WithText(
+            var record = new MessageRecord(false, obj.Id, obj.Name, messageId).WithText(
                 new MessageRecord.TextMessage(request.Text.Timestamp, request.Text.Text.UnifyToCrlf())); // C -> S, recv
             _onReceived?.Invoke(record);
             return Task.FromResult(new PushTextReply { Accepted = true, MessageId = messageId });
@@ -202,7 +215,7 @@ namespace LanDataTransmitter.Service {
                 return Task.FromResult(new PushFileReply { Accepted = false }); // not connect yet
             }
             var messageId = Utils.GenerateGlobalId();
-            var record = new MessageRecord(obj.Id, obj.Name, messageId).WithFile(
+            var record = new MessageRecord(false, obj.Id, obj.Name, messageId).WithFile(
                 new MessageRecord.FileMessage(request.File.Timestamp, request.File.Filename, request.File.Filesize)); // C -> S, recv
             // TODO
             _onReceived?.Invoke(record);

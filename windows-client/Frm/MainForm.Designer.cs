@@ -28,26 +28,26 @@ namespace LanDataTransmitter.Frm {
             this.grpState = new System.Windows.Forms.GroupBox();
             this.lblBehavior = new System.Windows.Forms.Label();
             this.lblClientInfo = new System.Windows.Forms.Label();
+            this.btnClientInfo = new System.Windows.Forms.Button();
             this.btnRestart = new System.Windows.Forms.Button();
             this.btnForceDisconnect = new System.Windows.Forms.Button();
             this.btnStop = new System.Windows.Forms.Button();
             this.btnSendFile = new System.Windows.Forms.Button();
             this.btnSendText = new System.Windows.Forms.Button();
             this.splContent = new System.Windows.Forms.SplitContainer();
+            this.lsvRecord = new LanDataTransmitter.Frm.View.MessageRecordListView();
             this.cmsListView = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmTextDetail = new System.Windows.Forms.ToolStripMenuItem();
             this.tssFirst = new System.Windows.Forms.ToolStripSeparator();
             this.tsmCopyInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmCopyText = new System.Windows.Forms.ToolStripMenuItem();
+            this.edtText = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.cboSendTo = new System.Windows.Forms.ComboBox();
             this.lblSendTo = new System.Windows.Forms.Label();
             this.tipMain = new System.Windows.Forms.ToolTip(this.components);
             this.lblRecord = new System.Windows.Forms.Label();
-            this.btnClientInfo = new System.Windows.Forms.Button();
-            this.lsvRecord = new LanDataTransmitter.Frm.View.MessageRecordListView();
-            this.edtText = new LanDataTransmitter.Frm.View.PlaceholderTextBox();
             this.grpState.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splContent)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize) (this.splContent)).BeginInit();
             this.splContent.Panel1.SuspendLayout();
             this.splContent.Panel2.SuspendLayout();
             this.splContent.SuspendLayout();
@@ -56,8 +56,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // grpState
             // 
-            this.grpState.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpState.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.grpState.Controls.Add(this.lblBehavior);
             this.grpState.Controls.Add(this.lblClientInfo);
             this.grpState.Controls.Add(this.btnClientInfo);
@@ -73,8 +72,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // lblBehavior
             // 
-            this.lblBehavior.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblBehavior.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.lblBehavior.AutoEllipsis = true;
             this.lblBehavior.Location = new System.Drawing.Point(12, 22);
             this.lblBehavior.Name = "lblBehavior";
@@ -85,8 +83,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // lblClientInfo
             // 
-            this.lblClientInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblClientInfo.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.lblClientInfo.AutoEllipsis = true;
             this.lblClientInfo.Location = new System.Drawing.Point(12, 44);
             this.lblClientInfo.Name = "lblClientInfo";
@@ -95,9 +92,21 @@ namespace LanDataTransmitter.Frm {
             this.lblClientInfo.Text = "未连接任何客户端";
             this.lblClientInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // btnClientInfo
+            // 
+            this.btnClientInfo.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnClientInfo.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnClientInfo.Location = new System.Drawing.Point(6, 69);
+            this.btnClientInfo.Name = "btnClientInfo";
+            this.btnClientInfo.Size = new System.Drawing.Size(75, 25);
+            this.btnClientInfo.TabIndex = 3;
+            this.btnClientInfo.Text = "客户端信息";
+            this.btnClientInfo.UseVisualStyleBackColor = true;
+            this.btnClientInfo.Click += new System.EventHandler(this.btnClientInfo_Click);
+            // 
             // btnRestart
             // 
-            this.btnRestart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnRestart.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnRestart.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnRestart.Location = new System.Drawing.Point(102, 69);
             this.btnRestart.Name = "btnRestart";
@@ -109,7 +118,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // btnForceDisconnect
             // 
-            this.btnForceDisconnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnForceDisconnect.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnForceDisconnect.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnForceDisconnect.Location = new System.Drawing.Point(183, 69);
             this.btnForceDisconnect.Name = "btnForceDisconnect";
@@ -121,7 +130,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // btnStop
             // 
-            this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnStop.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnStop.Location = new System.Drawing.Point(279, 69);
             this.btnStop.Name = "btnStop";
@@ -133,7 +142,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // btnSendFile
             // 
-            this.btnSendFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendFile.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendFile.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnSendFile.Location = new System.Drawing.Point(297, 329);
             this.btnSendFile.Name = "btnSendFile";
@@ -145,7 +154,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // btnSendText
             // 
-            this.btnSendText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendText.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendText.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnSendText.Location = new System.Drawing.Point(216, 329);
             this.btnSendText.Name = "btnSendText";
@@ -157,9 +166,7 @@ namespace LanDataTransmitter.Frm {
             // 
             // splContent
             // 
-            this.splContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splContent.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.splContent.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splContent.Location = new System.Drawing.Point(12, 142);
             this.splContent.Name = "splContent";
@@ -175,90 +182,6 @@ namespace LanDataTransmitter.Frm {
             this.splContent.Size = new System.Drawing.Size(360, 150);
             this.splContent.SplitterDistance = 101;
             this.splContent.TabIndex = 8;
-            // 
-            // cmsListView
-            // 
-            this.cmsListView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsmTextDetail,
-            this.tssFirst,
-            this.tsmCopyInfo,
-            this.tsmCopyText});
-            this.cmsListView.Name = "cmsListView";
-            this.cmsListView.Size = new System.Drawing.Size(178, 76);
-            // 
-            // tsmTextDetail
-            // 
-            this.tsmTextDetail.Name = "tsmTextDetail";
-            this.tsmTextDetail.Size = new System.Drawing.Size(177, 22);
-            this.tsmTextDetail.Tag = "depend";
-            this.tsmTextDetail.Text = "消息详情(&D)...";
-            this.tsmTextDetail.Click += new System.EventHandler(this.tsmTextDetail_Click);
-            // 
-            // tssFirst
-            // 
-            this.tssFirst.Name = "tssFirst";
-            this.tssFirst.Size = new System.Drawing.Size(174, 6);
-            // 
-            // tsmCopyInfo
-            // 
-            this.tsmCopyInfo.Name = "tsmCopyInfo";
-            this.tsmCopyInfo.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.tsmCopyInfo.Size = new System.Drawing.Size(177, 22);
-            this.tsmCopyInfo.Tag = "depend";
-            this.tsmCopyInfo.Text = "复制信息(&I)";
-            this.tsmCopyInfo.Click += new System.EventHandler(this.tsmCopyInfo_Click);
-            // 
-            // tsmCopyText
-            // 
-            this.tsmCopyText.Name = "tsmCopyText";
-            this.tsmCopyText.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.tsmCopyText.Size = new System.Drawing.Size(177, 22);
-            this.tsmCopyText.Tag = "depend";
-            this.tsmCopyText.Text = "复制文本(&C)";
-            this.tsmCopyText.Click += new System.EventHandler(this.tsmCopyText_Click);
-            // 
-            // cboSendTo
-            // 
-            this.cboSendTo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboSendTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboSendTo.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.cboSendTo.FormattingEnabled = true;
-            this.cboSendTo.Location = new System.Drawing.Point(69, 298);
-            this.cboSendTo.Name = "cboSendTo";
-            this.cboSendTo.Size = new System.Drawing.Size(303, 25);
-            this.cboSendTo.TabIndex = 12;
-            // 
-            // lblSendTo
-            // 
-            this.lblSendTo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblSendTo.AutoSize = true;
-            this.lblSendTo.Location = new System.Drawing.Point(12, 301);
-            this.lblSendTo.Name = "lblSendTo";
-            this.lblSendTo.Size = new System.Drawing.Size(51, 17);
-            this.lblSendTo.TabIndex = 11;
-            this.lblSendTo.Text = "发送至 :";
-            // 
-            // lblRecord
-            // 
-            this.lblRecord.AutoSize = true;
-            this.lblRecord.Location = new System.Drawing.Point(12, 119);
-            this.lblRecord.Name = "lblRecord";
-            this.lblRecord.Size = new System.Drawing.Size(286, 17);
-            this.lblRecord.TabIndex = 7;
-            this.lblRecord.Text = "消息收发记录：(共收到 0 条消息，已发送 0 条消息)";
-            // 
-            // btnClientInfo
-            // 
-            this.btnClientInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnClientInfo.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnClientInfo.Location = new System.Drawing.Point(6, 69);
-            this.btnClientInfo.Name = "btnClientInfo";
-            this.btnClientInfo.Size = new System.Drawing.Size(75, 25);
-            this.btnClientInfo.TabIndex = 3;
-            this.btnClientInfo.Text = "客户端信息";
-            this.btnClientInfo.UseVisualStyleBackColor = true;
-            this.btnClientInfo.Click += new System.EventHandler(this.btnClientInfo_Click);
             // 
             // lsvRecord
             // 
@@ -278,6 +201,46 @@ namespace LanDataTransmitter.Frm {
             this.lsvRecord.View = System.Windows.Forms.View.Details;
             this.lsvRecord.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lsvRecord_MouseDoubleClick);
             // 
+            // cmsListView
+            // 
+            this.cmsListView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.tsmTextDetail, this.tssFirst, this.tsmCopyInfo, this.tsmCopyText });
+            this.cmsListView.Name = "cmsListView";
+            this.cmsListView.Size = new System.Drawing.Size(178, 76);
+            // 
+            // tsmTextDetail
+            // 
+            this.tsmTextDetail.Enabled = false;
+            this.tsmTextDetail.Name = "tsmTextDetail";
+            this.tsmTextDetail.Size = new System.Drawing.Size(177, 22);
+            this.tsmTextDetail.Tag = "depend";
+            this.tsmTextDetail.Text = "消息详情(&D)...";
+            this.tsmTextDetail.Click += new System.EventHandler(this.tsmTextDetail_Click);
+            // 
+            // tssFirst
+            // 
+            this.tssFirst.Name = "tssFirst";
+            this.tssFirst.Size = new System.Drawing.Size(174, 6);
+            // 
+            // tsmCopyInfo
+            // 
+            this.tsmCopyInfo.Enabled = false;
+            this.tsmCopyInfo.Name = "tsmCopyInfo";
+            this.tsmCopyInfo.ShortcutKeys = ((System.Windows.Forms.Keys) ((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.tsmCopyInfo.Size = new System.Drawing.Size(177, 22);
+            this.tsmCopyInfo.Tag = "depend";
+            this.tsmCopyInfo.Text = "复制信息(&I)";
+            this.tsmCopyInfo.Click += new System.EventHandler(this.tsmCopyInfo_Click);
+            // 
+            // tsmCopyText
+            // 
+            this.tsmCopyText.Enabled = false;
+            this.tsmCopyText.Name = "tsmCopyText";
+            this.tsmCopyText.ShortcutKeys = ((System.Windows.Forms.Keys) ((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.tsmCopyText.Size = new System.Drawing.Size(177, 22);
+            this.tsmCopyText.Tag = "depend";
+            this.tsmCopyText.Text = "复制文本(&C)";
+            this.tsmCopyText.Click += new System.EventHandler(this.tsmCopyText_Click);
+            // 
             // edtText
             // 
             this.edtText.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -289,6 +252,36 @@ namespace LanDataTransmitter.Frm {
             this.edtText.Size = new System.Drawing.Size(360, 45);
             this.edtText.TabIndex = 10;
             this.edtText.TextChanged += new System.EventHandler(this.edtText_TextChanged);
+            // 
+            // cboSendTo
+            // 
+            this.cboSendTo.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboSendTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboSendTo.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cboSendTo.FormattingEnabled = true;
+            this.cboSendTo.Location = new System.Drawing.Point(69, 298);
+            this.cboSendTo.Name = "cboSendTo";
+            this.cboSendTo.Size = new System.Drawing.Size(303, 25);
+            this.cboSendTo.TabIndex = 12;
+            // 
+            // lblSendTo
+            // 
+            this.lblSendTo.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblSendTo.AutoSize = true;
+            this.lblSendTo.Location = new System.Drawing.Point(12, 301);
+            this.lblSendTo.Name = "lblSendTo";
+            this.lblSendTo.Size = new System.Drawing.Size(51, 17);
+            this.lblSendTo.TabIndex = 11;
+            this.lblSendTo.Text = "发送至 :";
+            // 
+            // lblRecord
+            // 
+            this.lblRecord.AutoSize = true;
+            this.lblRecord.Location = new System.Drawing.Point(12, 119);
+            this.lblRecord.Name = "lblRecord";
+            this.lblRecord.Size = new System.Drawing.Size(286, 17);
+            this.lblRecord.TabIndex = 7;
+            this.lblRecord.Text = "消息收发记录：(共收到 0 条消息，已发送 0 条消息)";
             // 
             // MainForm
             // 
@@ -302,7 +295,7 @@ namespace LanDataTransmitter.Frm {
             this.Controls.Add(this.cboSendTo);
             this.Controls.Add(this.btnSendText);
             this.Controls.Add(this.btnSendFile);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(400, 400);
@@ -315,12 +308,11 @@ namespace LanDataTransmitter.Frm {
             this.splContent.Panel1.ResumeLayout(false);
             this.splContent.Panel2.ResumeLayout(false);
             this.splContent.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splContent)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.splContent)).EndInit();
             this.splContent.ResumeLayout(false);
             this.cmsListView.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

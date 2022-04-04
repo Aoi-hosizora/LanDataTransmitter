@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Google.Protobuf;
 
 namespace LanDataTransmitter.Util {
 
@@ -72,6 +74,21 @@ namespace LanDataTransmitter.Util {
             return await Task.WhenAny(task, Task.Delay(duration)) == task
                 ? task // task complete
                 : Task.CompletedTask; // timeout
+        }
+
+        public static async Task<ByteString> ReadFileToByteString(this byte[] buf, FileStream file, int offset) {
+            var len = await file.ReadAsync(buf, offset, buf.Length);
+            if (len <= 0) {
+                return ByteString.Empty;
+            }
+            return ByteString.CopyFrom(buf, 0, len);
+        }
+
+        public static async Task WriteByteStringToFile(this ByteString bs, FileStream fs) {
+            var buf = bs.ToArray();
+            if (buf.Length > 0) {
+                await fs.WriteAsync(buf, 0, buf.Length);
+            }
         }
     }
 }
